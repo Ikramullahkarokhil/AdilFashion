@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/metro-config": "^0.19.8",
     "@expo/vector-icons": "^14.0.2",
     "@react-native-async-storage/async-storage": "^2.1.0",
     "@shopify/flash-list": "1.6.4",
@@ -18,7 +19,6 @@
     "expo-file-system": "^17.0.1",
     "expo-haptics": "^13.0.1",
     "expo-local-authentication": "~14.0.1",
-    "expo-media-library": "~16.0.5",
     "expo-navigation-bar": "~3.0.7",
     "expo-sharing": "^12.0.1",
     "expo-sqlite": "~14.0.6",
@@ -33,9 +33,6 @@
     "react-native-tab-view": "^3.5.2",
     "yup": "^1.4.0",
     "zustand": "^4.5.2"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.20.0"
   },
   "private": true
 }
