@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "AdilFashion",
@@ -31,13 +32,12 @@
     "web": {
       "favicon": "./assets/icon.png"
     },
-    "scheme": [
-      "adilfashion"
-    ],
     "extra": {
       "eas": {
         "projectId": "b44bccd2-4bd4-48c4-9af7-f968aeeef838"
       }
-    }
+    },
+    "scheme": "com.ikramullah.AdilFashion"
+
   }
 }

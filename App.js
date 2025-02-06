@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Text } from "react-native";
 import { initializeDatabase } from "./Database";
 import LoginPage from "./components/LoginScreen/LoginPage";
 import { Ionicons } from "@expo/vector-icons"; // Import Material Icons from Expo
@@ -11,10 +11,13 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { BottomNavigation } from "react-native-paper";
 import * as NavigationBar from "expo-navigation-bar";
 
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [index, setIndex] = useState(0);
   NavigationBar.setBackgroundColorAsync("#F2F5F3");
+
+
 
   const [routes] = useState([
     {
@@ -86,7 +89,6 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
-
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
@@ -110,3 +112,4 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
 });
+

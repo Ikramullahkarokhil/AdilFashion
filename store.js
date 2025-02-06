@@ -14,7 +14,7 @@ const useStore = create((set) => ({
   setTotalRecords: (total) => set({ totalRecords: total }),
   setLoadedRecords: (records) => set({ loadedRecords: records }),
 
-  fetchCustomerData: async (searchQuery, loadedRecords) => {
+  fetchCustomerData: async (searchQuery) => {
     let query =
       "SELECT * FROM customer WHERE name LIKE ? OR phoneNumber LIKE ?";
     const queryParams = [`%${searchQuery}%`, `%${searchQuery}%`];

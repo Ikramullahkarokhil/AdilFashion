@@ -9,7 +9,6 @@ dist/
 android/
 ios/
 web-build/
-android
 
 # Native
 *.orig.*

@@ -3,30 +3,49 @@ import { StyleSheet, View, Text } from "react-native";
 import Backup from "../BackupAndRestore/Backup";
 import ResetPassword from "../ResetPassword/ResetPassword";
 import { Button, Switch } from "react-native-paper";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const Settings = ({ onLogout }) => {
   const [isResetPasswordVisible, setIsResetPasswordVisible] = useState(false);
   const [isFingerprintEnabled, setIsFingerprintEnabled] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem("isFingerprintEnabled").then((value) => {
-      setIsFingerprintEnabled(value === 'true');
-    });
+    const loadInitialData = async () => {
+      try {
+        const fingerprintValue = await AsyncStorage.getItem("isFingerprintEnabled");
+        setIsFingerprintEnabled(fingerprintValue === "true");
+      } catch (error) {
+        console.error("Error loading initial data:", error);
+        setErrorMessage("Failed to load settings. Please try again.");
+      }
+    };
+
+    loadInitialData();
   }, []);
 
   const toggleResetPasswordModal = () => {
-    setIsResetPasswordVisible(!isResetPasswordVisible);
+    setIsResetPasswordVisible((prev) => !prev);
   };
 
-  const handleLogout = () => {
-    onLogout();
+  const handleLogout = async () => {
+    try {
+      onLogout();
+    } catch (error) {
+      console.error("Error logging out:", error);
+      setErrorMessage("Failed to log out. Please try again.");
+    }
   };
 
   const handleFingerprintToggle = async () => {
-    const newValue = !isFingerprintEnabled;
-    setIsFingerprintEnabled(newValue);
-    await AsyncStorage.setItem("isFingerprintEnabled", newValue.toString());
+    try {
+      const newValue = !isFingerprintEnabled;
+      setIsFingerprintEnabled(newValue);
+      await AsyncStorage.setItem("isFingerprintEnabled", newValue.toString());
+    } catch (error) {
+      console.error("Error saving fingerprint setting:", error);
+      setErrorMessage("Failed to save fingerprint setting. Please try again.");
+    }
   };
 
   return (
@@ -44,14 +63,15 @@ const Settings = ({ onLogout }) => {
           onClose={toggleResetPasswordModal}
           isVisible={isResetPasswordVisible}
         />
+
         <Backup />
-        
+
         <View style={styles.fingerprintToggleContainer}>
           <Text style={styles.fingerprintLabel}>Enable Fingerprint Unlock</Text>
-          <Switch 
-            value={isFingerprintEnabled} 
-            onValueChange={handleFingerprintToggle} 
-            color="#3498db" // Customize the switch color
+          <Switch
+            value={isFingerprintEnabled}
+            onValueChange={handleFingerprintToggle}
+            color="#3498db"
           />
         </View>
       </View>
@@ -87,22 +107,34 @@ const styles = StyleSheet.create({
   button: {
     marginBottom: 10,
   },
-  fingerprintToggleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
-    borderRadius: 30,
-    elevation: 2,
+  accountSelection: {
     marginVertical: 20,
+  },
+  fingerprintToggleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+    backgroundColor: "#fff",
+    paddingVertical: 8,
+    borderRadius: 30,
+    marginVertical: 20,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   fingerprintLabel: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
   },
   logout: {
     marginBottom: 20,
+  },
+  errorText: {
+    color: "red",
+    marginTop: 10,
   },
 });
