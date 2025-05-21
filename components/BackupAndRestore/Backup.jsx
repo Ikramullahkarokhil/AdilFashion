@@ -1,115 +1,236 @@
-import React, { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   StyleSheet,
   View,
   ToastAndroid,
-  ActivityIndicator,
+  Alert,
+  Platform,
+  Text,
 } from "react-native";
-import { Button } from "react-native-paper";
-
+import { Button, ProgressBar, Portal, Dialog } from "react-native-paper";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import * as Haptic from "expo-haptics";
+import * as Haptics from "expo-haptics";
 import Restore from "./Restore";
 import db from "../../Database";
 
+// Utility functions moved outside component for better performance
+const exportDataToJson = async (tableName) => {
+  const query = `SELECT * FROM ${tableName}`;
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        query,
+        [],
+        (_, { rows }) => {
+          const data = rows._array;
+          resolve(data);
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
+const saveJsonToFile = async (jsonData) => {
+  try {
+    const currentDate = new Date().toISOString().split("T")[0];
+    const fileName = `backup_${currentDate}.json`;
+    const fileUri = FileSystem.documentDirectory + fileName;
+    await FileSystem.writeAsStringAsync(fileUri, jsonData);
+    return { fileUri, fileName };
+  } catch (error) {
+    throw new Error(`Error saving backup file: ${error.message}`);
+  }
+};
+
 const Backup = () => {
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [backupDetails, setBackupDetails] = useState({ fileName: "", size: 0 });
 
-  const exportDataToJson = async (tableName) => {
-    const query = `SELECT * FROM ${tableName}`;
-    return new Promise((resolve, reject) => {
-      db.transaction((tx) => {
-        tx.executeSql(
-          query,
-          [],
-          (_, { rows }) => {
-            const data = rows._array;
-            const jsonData = JSON.stringify(data);
-            resolve(jsonData);
-          },
-          (_, error) => {
-            reject(error);
-          }
-        );
-      });
-    });
+  // Show confirmation dialog
+  const showConfirmDialog = () => {
+    setConfirmVisible(true);
   };
 
-  const saveJsonToFile = async (jsonData) => {
+  // Hide confirmation dialog
+  const hideConfirmDialog = () => {
+    setConfirmVisible(false);
+  };
+
+  // Provide haptic feedback based on platform
+  const triggerHapticFeedback = async (type = "success") => {
     try {
-      const currentDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
-      const fileUri =
-        FileSystem.documentDirectory + `backup_${currentDate}.json`; // Append current date to file name
-      await FileSystem.writeAsStringAsync(fileUri, jsonData);
-      console.log("JSON data saved to file:", fileUri);
-      return fileUri;
+      if (type === "success") {
+        await Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+      } else if (type === "error") {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } else {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
     } catch (error) {
-      console.error("Error saving JSON data to file:", error);
+      console.log("Haptics not available");
     }
   };
 
-  const handleBackup = async () => {
-    try {
-      setLoading(true); // Set loading to true while backing up data
-      const customerData = await exportDataToJson("customer");
-      const waskat = await exportDataToJson("waskat");
-      // Repeat this for each table you want to backup
+  // Show toast message with platform check
+  const showToast = (message) => {
+    if (Platform.OS === "android") {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      // For iOS, we could use an alternative like Alert or a custom toast component
+      Alert.alert("Notification", message);
+    }
+  };
 
-      // Merge or handle the data as needed
+  const handleBackup = useCallback(async () => {
+    try {
+      hideConfirmDialog();
+      setLoading(true);
+      setProgress(0.1);
+
+      // Get data from tables
+      const customerData = await exportDataToJson("customer");
+      setProgress(0.4);
+
+      const waskatData = await exportDataToJson("waskat");
+      setProgress(0.7);
+
+      // Combine all data
       const allData = {
-        customers: JSON.parse(customerData),
-        waskat: JSON.parse(waskat),
-        // Add more tables here if needed
+        customers: customerData,
+        waskat: waskatData,
+        // Add more tables as needed
+        backupDate: new Date().toISOString(),
+        appVersion: "1.0.0", // Add app version for compatibility checks
       };
 
-      const fileUri = await saveJsonToFile(JSON.stringify(allData));
+      setProgress(0.8);
+
+      // Save to file
+      const jsonString = JSON.stringify(allData);
+      const { fileUri, fileName } = await saveJsonToFile(jsonString);
+
+      // Get file size for user information
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      setBackupDetails({
+        fileName,
+        size: fileInfo.size ? Math.round(fileInfo.size / 1024) : 0, // Size in KB
+      });
+
+      setProgress(0.9);
 
       // Share the file
-      await Sharing.shareAsync(fileUri);
+      await Sharing.shareAsync(fileUri, {
+        mimeType: "application/json",
+        dialogTitle: "Save your backup file",
+        UTI: "public.json",
+      });
 
-      ToastAndroid.show("Backup successful!", ToastAndroid.SHORT);
-
-      // Trigger haptic feedback
-      Haptic.impactAsync(Haptic.ImpactFeedbackStyle.Heavy);
+      setProgress(1);
+      triggerHapticFeedback("success");
+      showToast("Backup completed successfully!");
     } catch (error) {
-      console.error("Error backing up data:", error);
+      console.error("Backup error:", error);
+      triggerHapticFeedback("error");
+      Alert.alert(
+        "Backup Failed",
+        `There was a problem creating your backup: ${error.message}`,
+        [{ text: "OK" }]
+      );
     } finally {
-      setLoading(false); // Set loading to false after backing up data, whether successful or not
+      setLoading(false);
+      setProgress(0);
     }
-  };
+  }, []);
 
   return (
     <View style={styles.container}>
       <Button
         icon="backup-restore"
-        mode="elevated"
-        buttonColor="white"
-        onPress={handleBackup}
+        mode="contained"
+        onPress={showConfirmDialog}
+        disabled={loading}
+        style={styles.button}
       >
         Backup Customer Data
       </Button>
+
       {loading && (
-        <ActivityIndicator color="blue" size={50} style={styles.loading} />
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>
+            {progress < 1 ? "Creating backup..." : "Backup complete!"}
+          </Text>
+          <ProgressBar progress={progress} style={styles.progressBar} />
+          {backupDetails.fileName && (
+            <Text
+              style={styles.detailsText}
+            >{`${backupDetails.fileName} (${backupDetails.size} KB)`}</Text>
+          )}
+        </View>
       )}
 
-      <View style={styles.restoreContainer}>
-        <Restore />
-      </View>
+      <Restore />
+
+      {/* Confirmation Dialog */}
+      <Portal>
+        <Dialog visible={confirmVisible} onDismiss={hideConfirmDialog}>
+          <Dialog.Title>Create Backup</Dialog.Title>
+          <Dialog.Content>
+            <Text>
+              This will create a backup of all your customer data and waskat
+              records. The backup file will be saved to your device and you can
+              share it.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideConfirmDialog}>Cancel</Button>
+            <Button onPress={handleBackup}>Continue</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 };
 
-export default Backup;
-
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
+    borderRadius: 8,
+    marginVertical: 10,
+    paddingTop: 8,
   },
-  restoreContainer: {
-    marginTop: 20,
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
   },
-  loading: {
-    marginTop: 15,
+  button: {
+    marginBottom: 16,
+  },
+
+  progressContainer: {
+    marginVertical: 16,
+  },
+  progressText: {
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  progressBar: {
+    height: 6,
+    borderRadius: 3,
+  },
+  detailsText: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 8,
+    textAlign: "center",
   },
 });
+
+export default Backup;

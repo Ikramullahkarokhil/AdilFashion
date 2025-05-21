@@ -109,7 +109,7 @@ const Waskat = () => {
     db.transaction(
       (tx) => {
         tx.executeSql(
-          "INSERT INTO waskat (name, phoneNumber, qad, yakhan, yakhanValue,shana, baghal,kamar, soreen,astin, regestrationDate) VALUES (?,?,?, ?, ?, ?, ?, ?, ?,?,?)",
+          "INSERT INTO waskat (name, phoneNumber, qad, yakhan, yakhanValue,shana, baghal,kamar, soreen,astin, farmaish, regestrationDate) VALUES (?,?,?, ?, ?, ?, ?, ?, ?, ?,?,?)",
           [
             values.name,
             values.phoneNumber,
@@ -121,6 +121,7 @@ const Waskat = () => {
             values.kamar,
             values.soreen,
             values.astin,
+            values.farmaish,
             currentDate,
           ],
           (_, resultSet) => {
@@ -145,7 +146,6 @@ const Waskat = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>قد اندام واسکت</Text>
       <Formik
         initialValues={{
           name: "",
@@ -158,6 +158,7 @@ const Waskat = () => {
           soreen: "",
           astin: "",
           yakhanValue: "",
+          farmaish: "",
         }}
         validationSchema={validationSchema}
         onSubmit={(values, { resetForm }) =>
@@ -288,6 +289,19 @@ const Waskat = () => {
                   keyboard="numeric"
                 />
               </View>
+            </View>
+
+            <View style={styles.fieldContainer}>
+              <DynamicInputField
+                label="فرمایشات"
+                name="farmaish"
+                handleChange={handleChange}
+                handleBlur={handleBlur}
+                value={values.farmaish}
+                errors={errors}
+                keyboard="default"
+                multiline={true}
+              />
             </View>
 
             <TouchableOpacity style={styles.button} onPress={handleSubmit}>

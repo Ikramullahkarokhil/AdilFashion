@@ -1,52 +1,36 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text } from "react-native";
+import React, { useState, useCallback } from "react";
+import { StyleSheet, View, Text, Alert } from "react-native";
 import Backup from "../BackupAndRestore/Backup";
 import ResetPassword from "../ResetPassword/ResetPassword";
-import { Button, Switch } from "react-native-paper";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { Button } from "react-native-paper";
 
 const Settings = ({ onLogout }) => {
   const [isResetPasswordVisible, setIsResetPasswordVisible] = useState(false);
-  const [isFingerprintEnabled, setIsFingerprintEnabled] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const fingerprintValue = await AsyncStorage.getItem("isFingerprintEnabled");
-        setIsFingerprintEnabled(fingerprintValue === "true");
-      } catch (error) {
-        console.error("Error loading initial data:", error);
-        setErrorMessage("Failed to load settings. Please try again.");
-      }
-    };
-
-    loadInitialData();
+  const toggleResetPasswordModal = useCallback(() => {
+    setIsResetPasswordVisible((prev) => !prev);
   }, []);
 
-  const toggleResetPasswordModal = () => {
-    setIsResetPasswordVisible((prev) => !prev);
-  };
-
-  const handleLogout = async () => {
-    try {
-      onLogout();
-    } catch (error) {
-      console.error("Error logging out:", error);
-      setErrorMessage("Failed to log out. Please try again.");
-    }
-  };
-
-  const handleFingerprintToggle = async () => {
-    try {
-      const newValue = !isFingerprintEnabled;
-      setIsFingerprintEnabled(newValue);
-      await AsyncStorage.setItem("isFingerprintEnabled", newValue.toString());
-    } catch (error) {
-      console.error("Error saving fingerprint setting:", error);
-      setErrorMessage("Failed to save fingerprint setting. Please try again.");
-    }
-  };
+  const handleLogout = useCallback(() => {
+    Alert.alert("Confirm Logout", "Are you sure you want to log out?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Logout",
+        onPress: async () => {
+          try {
+            await onLogout();
+          } catch (error) {
+            console.error("Error logging out:", error);
+            setErrorMessage("Failed to log out. Please try again.");
+          }
+        },
+      },
+    ]);
+  }, [onLogout]);
 
   return (
     <View style={styles.container}>
@@ -55,7 +39,7 @@ const Settings = ({ onLogout }) => {
           mode="elevated"
           buttonColor="white"
           onPress={toggleResetPasswordModal}
-          style={styles.button}
+          accessibilityLabel="Change Password"
         >
           Change Password
         </Button>
@@ -63,17 +47,8 @@ const Settings = ({ onLogout }) => {
           onClose={toggleResetPasswordModal}
           isVisible={isResetPasswordVisible}
         />
-
         <Backup />
-
-        <View style={styles.fingerprintToggleContainer}>
-          <Text style={styles.fingerprintLabel}>Enable Fingerprint Unlock</Text>
-          <Switch
-            value={isFingerprintEnabled}
-            onValueChange={handleFingerprintToggle}
-            color="#3498db"
-          />
-        </View>
+        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
       </View>
 
       <View style={styles.logout}>
@@ -81,8 +56,8 @@ const Settings = ({ onLogout }) => {
           icon="logout"
           mode="elevated"
           buttonColor="white"
-          style={styles.button}
           onPress={handleLogout}
+          accessibilityLabel="Logout"
         >
           Logout
         </Button>
@@ -91,7 +66,7 @@ const Settings = ({ onLogout }) => {
   );
 };
 
-export default Settings;
+export default React.memo(Settings);
 
 const styles = StyleSheet.create({
   container: {
@@ -104,32 +79,12 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  button: {
+  header: {
+    fontSize: 20,
+    fontWeight: "bold",
     marginBottom: 10,
   },
-  accountSelection: {
-    marginVertical: 20,
-  },
-  fingerprintToggleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-    backgroundColor: "#fff",
-    paddingVertical: 8,
-    borderRadius: 30,
-    marginVertical: 20,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  fingerprintLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
-  },
+
   logout: {
     marginBottom: 20,
   },

@@ -20,9 +20,9 @@ const AddPage = () => {
   const renderTabBar = (props) => (
     <TabBar
       {...props}
-      indicatorStyle={{ backgroundColor: "#0083D0" }}
-      style={{ backgroundColor: "#F2F5F3" }}
-      labelStyle={{ color: "#0083D0" }}
+      indicatorStyle={styles.indicator}
+      style={styles.tabBar}
+      labelStyle={styles.tabLabel}
     />
   );
 
@@ -32,7 +32,8 @@ const AddPage = () => {
         navigationState={{ index, routes }}
         renderScene={renderScene}
         onIndexChange={setIndex}
-        // initialLayout={{ width: layout.width }}
+        initialLayout={{ width: layout.width }}
+        lazy={true}
         renderTabBar={renderTabBar}
       />
     </SafeAreaView>
@@ -43,6 +44,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F2F5F3",
+  },
+  tabBar: {
+    backgroundColor: "#F2F5F3",
+  },
+  tabLabel: {
+    color: "#0083D0",
+  },
+  indicator: {
+    backgroundColor: "#0083D0",
   },
 });
 

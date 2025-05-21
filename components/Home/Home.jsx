@@ -6,6 +6,8 @@ import {
   ToastAndroid,
   Text,
   TouchableOpacity,
+  ActivityIndicator,
+  Animated,
 } from "react-native";
 import {
   Searchbar,
@@ -40,24 +42,85 @@ const Home = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
   const flatListRef = useRef(null);
+  const PAGE_SIZE = 10;
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isScrollingUp, setIsScrollingUp] = useState(false);
+  const scrollTopOpacity = useRef(new Animated.Value(0)).current;
+  const SCROLL_THRESHOLD = 500; // Show button after scrolling 500 units
 
   useEffect(() => {
-    fetchData(selectedOption, searchQuery, loadedRecords);
+    setPage(1);
+    setLoadedRecords(PAGE_SIZE);
+    fetchData(selectedOption, searchQuery, PAGE_SIZE, 0);
     fetchTotalRecords(selectedOption);
   }, [searchQuery, selectedOption]);
+
+  const loadMoreData = useCallback(async () => {
+    if (isLoadingMore || data.length >= totalRecords) return;
+
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    const offset = (nextPage - 1) * PAGE_SIZE;
+
+    await fetchData(selectedOption, searchQuery, PAGE_SIZE, offset);
+    setPage(nextPage);
+    setLoadedRecords((prev) => prev + PAGE_SIZE);
+    setIsLoadingMore(false);
+  }, [
+    isLoadingMore,
+    page,
+    data.length,
+    totalRecords,
+    selectedOption,
+    searchQuery,
+  ]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setPage(1);
+    setLoadedRecords(PAGE_SIZE);
+    fetchData(selectedOption, searchQuery, PAGE_SIZE, 0);
+    fetchTotalRecords(selectedOption);
+    setRefreshing(false);
+  }, [selectedOption, searchQuery]);
+
+  const handleScroll = useCallback(
+    (event) => {
+      const currentScrollY = event.nativeEvent.contentOffset.y;
+      const isScrollingUpNow = currentScrollY < lastScrollY;
+
+      setIsScrollingUp(isScrollingUpNow);
+      setLastScrollY(currentScrollY);
+
+      const shouldShowButton =
+        currentScrollY > SCROLL_THRESHOLD && isScrollingUpNow;
+
+      if (shouldShowButton !== showScrollTop) {
+        setShowScrollTop(shouldShowButton);
+        Animated.timing(scrollTopOpacity, {
+          toValue: shouldShowButton ? 1 : 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+    [lastScrollY, showScrollTop]
+  );
 
   const goToTop = () => {
     flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
     setLoadedRecords(10);
+    setShowScrollTop(false);
+    Animated.timing(scrollTopOpacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
   };
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchData(selectedOption, searchQuery, loadedRecords);
-    fetchTotalRecords(selectedOption);
-    setRefreshing(false);
-  }, [selectedOption, searchQuery, loadedRecords]);
 
   const handleDetails = (item) => {
     setSelectedCustomer(item);
@@ -166,6 +229,15 @@ const Home = () => {
     [totalRecords]
   );
 
+  const renderFooter = useCallback(() => {
+    if (!isLoadingMore) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#0083D0" />
+      </View>
+    );
+  }, [isLoadingMore]);
+
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
@@ -199,14 +271,35 @@ const Home = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListHeaderComponent={renderListHeader}
+        ListFooterComponent={renderFooter}
+        onEndReached={loadMoreData}
+        onEndReachedThreshold={1.5}
         initialNumToRender={5}
         estimatedItemSize={139}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       />
-      <View style={styles.goToTopButton}>
+
+      <Animated.View
+        style={[
+          styles.goToTopButton,
+          {
+            opacity: scrollTopOpacity,
+            transform: [
+              {
+                translateY: scrollTopOpacity.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [50, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
         <TouchableOpacity onPress={goToTop}>
-          <IconButton icon="arrow-up" color="#0083D0" />
+          <IconButton icon="arrow-up" iconColor="white" />
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       {modalVisible && selectedOption === "customer" && (
         <CustomerDetailsModal
@@ -306,7 +399,19 @@ const styles = StyleSheet.create({
     bottom: 20,
     right: 20,
     backgroundColor: "#0083D0",
-    borderRadius: 20,
+    borderRadius: 25,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: "center",
   },
 });
 

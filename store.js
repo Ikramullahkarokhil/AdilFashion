@@ -14,16 +14,22 @@ const useStore = create((set) => ({
   setTotalRecords: (total) => set({ totalRecords: total }),
   setLoadedRecords: (records) => set({ loadedRecords: records }),
 
-  fetchCustomerData: async (searchQuery) => {
+  fetchCustomerData: async (searchQuery, limit, offset) => {
     let query =
-      "SELECT * FROM customer WHERE name LIKE ? OR phoneNumber LIKE ?";
-    const queryParams = [`%${searchQuery}%`, `%${searchQuery}%`];
+      "SELECT * FROM customer WHERE name LIKE ? OR phoneNumber LIKE ? LIMIT ? OFFSET ?";
+    const queryParams = [`%${searchQuery}%`, `%${searchQuery}%`, limit, offset];
     db.transaction((tx) => {
       tx.executeSql(
         query,
         queryParams,
         (_, { rows: { _array } }) => {
-          set({ data: _array });
+          if (offset === 0) {
+            set({ data: _array });
+          } else {
+            set((state) => ({
+              data: [...state.data, ..._array],
+            }));
+          }
         },
         (error) => {
           console.log("Error:", error);
@@ -32,15 +38,22 @@ const useStore = create((set) => ({
     });
   },
 
-  fetchWaskatData: async (searchQuery, loadedRecords) => {
-    let query = "SELECT * FROM waskat WHERE name LIKE ? OR phoneNumber LIKE ?";
-    const queryParams = [`%${searchQuery}%`, `%${searchQuery}%`];
+  fetchWaskatData: async (searchQuery, limit, offset) => {
+    let query =
+      "SELECT * FROM waskat WHERE name LIKE ? OR phoneNumber LIKE ? LIMIT ? OFFSET ?";
+    const queryParams = [`%${searchQuery}%`, `%${searchQuery}%`, limit, offset];
     db.transaction((tx) => {
       tx.executeSql(
         query,
         queryParams,
         (_, { rows: { _array } }) => {
-          set({ data: _array });
+          if (offset === 0) {
+            set({ data: _array });
+          } else {
+            set((state) => ({
+              data: [...state.data, ..._array],
+            }));
+          }
         },
         (error) => {
           console.log("Error:", error);
@@ -49,11 +62,11 @@ const useStore = create((set) => ({
     });
   },
 
-  fetchData: async (selectedOption, searchQuery, loadedRecords) => {
+  fetchData: async (selectedOption, searchQuery, limit, offset) => {
     if (selectedOption === "customer") {
-      await useStore.getState().fetchCustomerData(searchQuery, loadedRecords);
+      await useStore.getState().fetchCustomerData(searchQuery, limit, offset);
     } else if (selectedOption === "waskat") {
-      await useStore.getState().fetchWaskatData(searchQuery, loadedRecords);
+      await useStore.getState().fetchWaskatData(searchQuery, limit, offset);
     }
   },
 

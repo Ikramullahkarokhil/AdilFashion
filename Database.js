@@ -53,6 +53,7 @@ db.transaction((tx) => {
       soreen REAL,
       astin REAL,
       yakhanValue REAL,
+      farmaish TEXT,
       regestrationDate DATE
     );`
   );

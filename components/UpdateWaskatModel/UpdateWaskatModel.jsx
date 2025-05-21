@@ -96,6 +96,7 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
     kamar: customerData?.kamar?.toString() || "",
     soreen: customerData?.soreen?.toString() || "",
     astin: customerData?.astin?.toString() || "",
+    farmaish: customerData?.farmaish || "",
   };
 
   const getCurrentDate = () => {
@@ -126,6 +127,7 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
       kamar,
       soreen,
       astin,
+      farmaish,
     } = values;
 
     db.transaction(
@@ -144,6 +146,7 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
             kamar = ?,
             soreen = ?,
             astin = ?,
+            farmaish = ?,
             regestrationDate = ?
           WHERE id = ?
           `,
@@ -158,6 +161,7 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
             kamar,
             soreen,
             astin,
+            farmaish,
             currentDate,
             customerId,
           ],
@@ -317,6 +321,18 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
                 </View>
               </View>
 
+              <View style={styles.fieldContainer}>
+                <DynamicInputField
+                  label="فرمایشات"
+                  name="farmaish"
+                  handleChange={handleChange}
+                  handleBlur={handleBlur}
+                  value={values.farmaish}
+                  errors={errors}
+                  keyboard="default"
+                  multiline={true}
+                />
+              </View>
               <View style={styles.buttonContainer}>
                 <Button mode="outlined" onPress={onClose}>
                   Cancel Update
