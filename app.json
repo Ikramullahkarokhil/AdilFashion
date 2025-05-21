@@ -1,9 +1,8 @@
-
 {
   "expo": {
     "name": "AdilFashion",
     "slug": "AdilFashion",
-    "version": "3.0.0",
+    "version": "3.5.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#F2F5F3"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -23,10 +20,7 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#F2F5F3"
       },
-      "permissions": [
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ],
+      "permissions": ["READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"],
       "package": "com.ikramullah.AdilFashion"
     },
     "web": {
@@ -38,6 +32,5 @@
       }
     },
     "scheme": "com.ikramullah.AdilFashion"
-
   }
 }
