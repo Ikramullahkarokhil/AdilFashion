@@ -30,63 +30,77 @@ const Home = () => {
     data,
     selectedOption,
     totalRecords,
-    loadedRecords,
     setSearchQuery,
     setSelectedOption,
-    setLoadedRecords,
     fetchData,
     fetchTotalRecords,
+    resetStore,
   } = useStore();
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
   const flatListRef = useRef(null);
-  const PAGE_SIZE = 10;
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isScrollingUp, setIsScrollingUp] = useState(false);
   const scrollTopOpacity = useRef(new Animated.Value(0)).current;
-  const SCROLL_THRESHOLD = 500; // Show button after scrolling 500 units
+  const SCROLL_THRESHOLD = 500;
 
+  // Load initial data
   useEffect(() => {
-    setPage(1);
-    setLoadedRecords(PAGE_SIZE);
-    fetchData(selectedOption, searchQuery, PAGE_SIZE, 0);
-    fetchTotalRecords(selectedOption);
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          fetchData(selectedOption, searchQuery),
+          fetchTotalRecords(selectedOption),
+        ]);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        ToastAndroid.show("Failed to load data", ToastAndroid.SHORT);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Handle search and option changes
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          fetchData(selectedOption, searchQuery),
+          fetchTotalRecords(selectedOption),
+        ]);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        ToastAndroid.show("Failed to load data", ToastAndroid.SHORT);
+      }
+    };
+
+    loadData();
   }, [searchQuery, selectedOption]);
 
-  const loadMoreData = useCallback(async () => {
-    if (isLoadingMore || data.length >= totalRecords) return;
-
-    setIsLoadingMore(true);
-    const nextPage = page + 1;
-    const offset = (nextPage - 1) * PAGE_SIZE;
-
-    await fetchData(selectedOption, searchQuery, PAGE_SIZE, offset);
-    setPage(nextPage);
-    setLoadedRecords((prev) => prev + PAGE_SIZE);
-    setIsLoadingMore(false);
-  }, [
-    isLoadingMore,
-    page,
-    data.length,
-    totalRecords,
-    selectedOption,
-    searchQuery,
-  ]);
-
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setPage(1);
-    setLoadedRecords(PAGE_SIZE);
-    fetchData(selectedOption, searchQuery, PAGE_SIZE, 0);
-    fetchTotalRecords(selectedOption);
-    setRefreshing(false);
+    try {
+      await Promise.all([
+        fetchData(selectedOption, searchQuery),
+        fetchTotalRecords(selectedOption),
+      ]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      ToastAndroid.show("Failed to refresh data", ToastAndroid.SHORT);
+    } finally {
+      setRefreshing(false);
+    }
   }, [selectedOption, searchQuery]);
+
+  const handleOptionChange = (option) => {
+    const englishTableName = optionMapping[option];
+    setSelectedOption(englishTableName);
+  };
 
   const handleScroll = useCallback(
     (event) => {
@@ -113,7 +127,6 @@ const Home = () => {
 
   const goToTop = () => {
     flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
-    setLoadedRecords(10);
     setShowScrollTop(false);
     Animated.timing(scrollTopOpacity, {
       toValue: 0,
@@ -149,7 +162,7 @@ const Home = () => {
           setModalVisible(false);
           setConfirmationVisible(false);
           fetchTotalRecords(selectedOption);
-          fetchData(selectedOption, searchQuery, loadedRecords);
+          fetchData(selectedOption, searchQuery);
         },
         (error) => {
           console.log("Error deleting customer:", error);
@@ -163,11 +176,12 @@ const Home = () => {
     واسکت: "waskat",
   };
 
-  const handleOptionChange = (option) => {
-    const englishTableName = optionMapping[option];
-    setSelectedOption(englishTableName);
-    fetchTotalRecords(englishTableName);
-  };
+  // Reset store when component unmounts
+  useEffect(() => {
+    return () => {
+      resetStore();
+    };
+  }, []);
 
   const ListItem = React.memo(({ item, onPressDetails, onPressDelete }) => {
     return (
@@ -217,7 +231,7 @@ const Home = () => {
         onPressDelete={handleDelete}
       />
     ),
-    [fetchData]
+    []
   );
 
   const renderListHeader = useCallback(
@@ -228,15 +242,6 @@ const Home = () => {
     ),
     [totalRecords]
   );
-
-  const renderFooter = useCallback(() => {
-    if (!isLoadingMore) return null;
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#0083D0" />
-      </View>
-    );
-  }, [isLoadingMore]);
 
   return (
     <View style={styles.container}>
@@ -271,13 +276,12 @@ const Home = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListHeaderComponent={renderListHeader}
-        ListFooterComponent={renderFooter}
-        onEndReached={loadMoreData}
-        onEndReachedThreshold={1.5}
-        initialNumToRender={5}
         estimatedItemSize={139}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
       />
 
       <Animated.View
@@ -408,10 +412,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-  },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: "center",
   },
 });
 
