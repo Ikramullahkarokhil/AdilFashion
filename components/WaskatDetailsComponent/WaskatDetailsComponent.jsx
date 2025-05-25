@@ -7,13 +7,7 @@ import {
   Dimensions,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { Button, Title, Divider, IconButton } from "react-native-paper";
-import {
-  differenceInDays,
-  differenceInMonths,
-  differenceInYears,
-  format,
-} from "date-fns";
+import { Button, Divider, IconButton } from "react-native-paper";
 import UpdateWaskatModel from "../UpdateWaskatModel/UpdateWaskatModel";
 
 const { width, height } = Dimensions.get("window");
@@ -23,50 +17,28 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
 
   useEffect(() => {
-    // Update jeebTunban state and calculate time since registration
     if (customer) {
       const currentDate = new Date();
-      const diffInDays = differenceInDays(
-        currentDate,
-        customer.regestrationDate
-      );
-      const diffInMonths = differenceInMonths(
-        currentDate,
-        customer.regestrationDate
-      );
-      const diffInYears = differenceInYears(
-        currentDate,
-        customer.regestrationDate
-      );
+      const registrationDate = new Date(customer.regestrationDate);
+
+      const diffTime = Math.abs(currentDate - registrationDate);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const diffMonths = Math.floor(diffDays / 30);
+      const diffYears = Math.floor(diffMonths / 12);
 
       let timeElapsed;
-      if (diffInYears > 0) {
-        // Years
-        timeElapsed =
-          format(customer.regestrationDate, "yyyy-MM-dd") +
-          " (" +
-          diffInYears +
-          " year" +
-          (diffInYears > 1 ? "s" : "") +
-          " ago)";
-      } else if (diffInMonths > 0) {
-        // Months
-        timeElapsed =
-          format(customer.regestrationDate, "yyyy-MM-dd") +
-          " (" +
-          diffInMonths +
-          " month" +
-          (diffInMonths > 1 ? "s" : "") +
-          " ago)";
+      if (diffYears > 0) {
+        timeElapsed = `${
+          registrationDate.toISOString().split("T")[0]
+        } (${diffYears} year${diffYears > 1 ? "s" : ""} ago)`;
+      } else if (diffMonths > 0) {
+        timeElapsed = `${
+          registrationDate.toISOString().split("T")[0]
+        } (${diffMonths} month${diffMonths > 1 ? "s" : ""} ago)`;
       } else {
-        // Days
-        timeElapsed =
-          format(customer.regestrationDate, "yyyy-MM-dd") +
-          " (" +
-          diffInDays +
-          " day" +
-          (diffInDays > 1 ? "s" : "") +
-          " ago)";
+        timeElapsed = `${
+          registrationDate.toISOString().split("T")[0]
+        } (${diffDays} day${diffDays > 1 ? "s" : ""} ago)`;
       }
 
       setTimeSinceRegistration(timeElapsed);
@@ -84,7 +56,7 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} animationType="fade" transparent={true}>
+    <Modal visible={visible} animationType="fade">
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           {customer ? (
@@ -97,9 +69,9 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
                   style={styles.closeButton}
                 />
                 <View style={styles.headerContent}>
-                  <Title style={styles.modalTitle}>
+                  <Text style={styles.modalTitle}>
                     قد اندام : {customer.name}
-                  </Title>
+                  </Text>
                 </View>
                 <View style={styles.iconContainer}>
                   <IconButton
@@ -119,8 +91,6 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
                 alwaysBounceVertical={true}
               >
                 <View style={styles.detailsContainer}>
-                  <DetailRow label="شماره مسلسل" value={customer.id} />
-                  <Divider style={styles.divider} />
                   <DetailRow label="نام مشتری" value={customer.name} />
                   <Divider style={styles.divider} />
                   <DetailRow
@@ -158,6 +128,8 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
                   style={styles.updateButton}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
+                  buttonColor="#0083D0"
+                  textColor="white"
                 >
                   Update
                 </Button>
@@ -167,6 +139,8 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
                   style={styles.closeModalButton}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
+                  buttonColor="white"
+                  textColor="black"
                 >
                   Close
                 </Button>
@@ -212,7 +186,6 @@ const DetailRow = ({ label, value }) => (
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
     flex: 1,
@@ -227,7 +200,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F2F5F3",
     position: "relative",
   },
   closeButton: {
@@ -308,17 +281,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F2F5F3",
   },
   updateButton: {
     flex: 1,
     marginRight: 8,
-    backgroundColor: "#0083D0",
   },
   closeModalButton: {
     flex: 1,
     marginLeft: 8,
-    borderColor: "#0083D0",
   },
   buttonContent: {
     height: 44,

@@ -114,8 +114,11 @@ android {
         applicationId 'com.ikramullah.AdilFashion'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode 3
         versionName "3.5.0"
+         ndk {
+            abiFilters "arm64-v8a"
+        }
     }
     signingConfigs {
         debug {

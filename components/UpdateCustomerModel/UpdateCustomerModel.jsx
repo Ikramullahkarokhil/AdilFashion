@@ -77,6 +77,11 @@ const DynamicInputField = ({
         error={errors[name] ? true : false}
         keyboardType={keyboard}
         multiline={true}
+        textColor="black"
+        cursorColor="#0083D0"
+        underlineColor="#0083D0"
+        activeUnderlineColor="#0083D0"
+        placeholderTextColor="#0083D0"
       />
     </View>
   );
@@ -506,10 +511,20 @@ const UpdateCustomerModel = ({ customerData, onClose, visible }) => {
                 </View>
               </View>
               <View style={styles.buttonContainer}>
-                <Button mode="outlined" onPress={onClose}>
+                <Button
+                  mode="outlined"
+                  onPress={onClose}
+                  buttonColor="white"
+                  textColor="black"
+                >
                   Cancel Update
                 </Button>
-                <Button mode="contained" onPress={handleSubmit}>
+                <Button
+                  mode="contained"
+                  onPress={handleSubmit}
+                  buttonColor="#0083D0"
+                  textColor="white"
+                >
                   Update Customer
                 </Button>
               </View>
@@ -555,7 +570,7 @@ const styles = StyleSheet.create({
   },
   dropdownButton: {
     borderBottomWidth: 0.5,
-    borderColor: "black",
+    borderColor: "#0083D0",
     borderRadius: 5,
     paddingVertical: 10,
     paddingHorizontal: 15,
@@ -589,7 +604,7 @@ const styles = StyleSheet.create({
   checkbox: {
     backgroundColor: "white",
     borderBottomWidth: 0.5,
-    borderColor: "black",
+    borderColor: "#0083D0",
     borderRadius: 5,
     height: 55,
     width: "auto",

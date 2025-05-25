@@ -77,6 +77,11 @@ const DynamicInputField = ({
         error={errors[name] ? true : false}
         keyboardType={keyboard}
         multiline={true}
+        textColor="black"
+        cursorColor="#0083D0"
+        underlineColor="#0083D0"
+        activeUnderlineColor="#0083D0"
+        placeholderTextColor="#0083D0"
       />
     </View>
   );
@@ -334,10 +339,20 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
                 />
               </View>
               <View style={styles.buttonContainer}>
-                <Button mode="outlined" onPress={onClose}>
+                <Button
+                  mode="outlined"
+                  onPress={onClose}
+                  buttonColor="white"
+                  textColor="black"
+                >
                   Cancel Update
                 </Button>
-                <Button mode="contained" onPress={handleSubmit}>
+                <Button
+                  mode="contained"
+                  onPress={handleSubmit}
+                  buttonColor="#0083D0"
+                  textColor="white"
+                >
                   Update Customer
                 </Button>
               </View>
@@ -401,7 +416,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 5,
     paddingVertical: 10,
     paddingHorizontal: 1,
-    borderColor: "black",
+    borderColor: "#0083D0",
     width: "auto",
     height: 55,
     backgroundColor: "white",

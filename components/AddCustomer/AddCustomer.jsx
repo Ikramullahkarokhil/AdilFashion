@@ -83,6 +83,11 @@ const DynamicInputField = ({
         error={errors[name] ? true : false}
         keyboardType={keyboard}
         multiline={true}
+        textColor="black"
+        cursorColor="#0083D0"
+        underlineColor="#0083D0"
+        activeUnderlineColor="#0083D0"
+        placeholderTextColor="#0083D0"
       />
     </View>
   );
@@ -484,7 +489,6 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 10,
     backgroundColor: "white",
-    borderColor: "black",
   },
   error: {
     color: "red",
@@ -508,7 +512,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 5,
     paddingVertical: 10,
     paddingHorizontal: 1,
-    borderColor: "black",
+    borderColor: "#0083D0",
     width: "auto",
     height: 55,
     backgroundColor: "white",
@@ -539,7 +543,7 @@ const styles = StyleSheet.create({
   checkbox: {
     backgroundColor: "white",
     borderBottomWidth: 0.5,
-    borderColor: "black",
+    borderColor: "#0083D0",
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
     height: 55,

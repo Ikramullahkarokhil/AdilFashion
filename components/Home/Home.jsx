@@ -6,16 +6,9 @@ import {
   ToastAndroid,
   Text,
   TouchableOpacity,
-  ActivityIndicator,
   Animated,
 } from "react-native";
-import {
-  Searchbar,
-  Card,
-  Title,
-  Paragraph,
-  IconButton,
-} from "react-native-paper";
+import { Searchbar, Card, IconButton } from "react-native-paper";
 import CustomerDetailsModal from "../CustomerDetailsModal/CustomerDetailsModal";
 import ConfirmationDialog from "../ConfirmationDialog/ConfirmationDialog";
 import SelectDropdown from "react-native-select-dropdown";
@@ -23,6 +16,7 @@ import WaskatDetailsComponent from "../WaskatDetailsComponent/WaskatDetailsCompo
 import useStore from "../../store";
 import db from "../../Database";
 import { FlashList } from "@shopify/flash-list";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const Home = () => {
   const {
@@ -192,32 +186,36 @@ const Home = () => {
         onPress={() => onPressDetails(item)}
       >
         <View style={styles.cardDirection}>
+          <View style={styles.leftIcons}>
+            <IconButton
+              icon="eye"
+              iconColor="#0083D0"
+              onPress={() => onPressDetails(item)}
+            />
+            <IconButton
+              icon="delete"
+              iconColor="red"
+              onPress={() => onPressDelete(item)}
+            />
+          </View>
           <View style={styles.cardContent}>
             <Card.Content>
-              <Title style={styles.title}>Name: {item.name}</Title>
-              <Paragraph>
-                Phone: <Text style={styles.content}>{item.phoneNumber}</Text>
-              </Paragraph>
-              <Paragraph>
-                Registration Date:{" "}
-                <Text style={styles.content}>{item.regestrationDate}</Text>
-              </Paragraph>
+              <View style={styles.contentRow}>
+                <Text style={styles.title}>{item.name}</Text>
+                <Ionicons name="person" size={16} color="#0083D0" />
+              </View>
+              {item.phoneNumber && (
+                <View style={styles.contentRow}>
+                  <Text style={styles.subContent}>{item.phoneNumber}</Text>
+                  <Ionicons name="call" size={16} color="#0083D0" />
+                </View>
+              )}
+              <View style={styles.contentRow}>
+                <Text style={styles.subContent}>{item.regestrationDate}</Text>
+                <Ionicons name="calendar" size={16} color="#0083D0" />
+              </View>
             </Card.Content>
           </View>
-          <Card.Actions>
-            <View style={styles.iconDirection}>
-              <IconButton
-                icon="eye"
-                iconColor="#0083D0"
-                onPress={() => onPressDetails(item)}
-              />
-              <IconButton
-                icon="delete"
-                iconColor="red"
-                onPress={() => onPressDelete(item)}
-              />
-            </View>
-          </Card.Actions>
         </View>
       </Card>
     );
@@ -251,6 +249,7 @@ const Home = () => {
           onChangeText={(text) => setSearchQuery(text)}
           value={searchQuery}
           style={styles.searchbar}
+          elevation={1}
         />
         <SelectDropdown
           data={["کالا", "واسکت"]}
@@ -348,6 +347,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     backgroundColor: "white",
     borderRadius: 15,
+    marginTop: 5,
   },
   dropdownButton: {
     borderRadius: 15,
@@ -356,6 +356,8 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     width: 100,
     height: 55,
+    elevation: 3,
+    marginTop: 5,
   },
   dropdownButtonText: {
     color: "#333",
@@ -372,28 +374,43 @@ const styles = StyleSheet.create({
   },
   card: {
     marginVertical: 10,
-    borderRadius: 10,
+    borderRadius: 16,
     marginHorizontal: 10,
     backgroundColor: "white",
-    justifyContent: "center",
-  },
-  cardContent: {
     justifyContent: "center",
   },
   cardDirection: {
     flex: 1,
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
   },
-  iconDirection: {
+  leftIcons: {
     flexDirection: "column",
+    paddingLeft: 8,
+  },
+  cardContent: {
+    flex: 1,
+    paddingLeft: 8,
+    alignItems: "flex-end",
+  },
+  contentRow: {
+    flexDirection: "row",
     justifyContent: "flex-end",
+    alignItems: "center",
+    marginVertical: 4,
+    width: "100%",
   },
   title: {
     fontSize: 18,
-    marginBottom: 5,
+    color: "black",
+    fontWeight: "500",
+    marginRight: 8,
   },
-
+  subContent: {
+    color: "black",
+    fontWeight: "300",
+    marginRight: 8,
+  },
   totalRecords: {
     marginBottom: 5,
     marginHorizontal: 10,

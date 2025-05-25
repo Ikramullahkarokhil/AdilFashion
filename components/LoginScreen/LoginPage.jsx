@@ -5,14 +5,18 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Formik } from "formik";
 import { StatusBar } from "expo-status-bar";
 import * as yup from "yup";
 import { executeSql } from "../../Database";
 import { TextInput } from "react-native-paper";
-import * as NavigationBar from "expo-navigation-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const { width } = Dimensions.get("window");
 
 const LoginSchema = yup.object().shape({
   password: yup.string().required("Password is required"),
@@ -21,7 +25,6 @@ const LoginSchema = yup.object().shape({
 const LoginPage = ({ onLogin }) => {
   const [isPasswordIncorrect, setIsPasswordIncorrect] = useState(false);
   const [loading, setLoading] = useState(false);
-  NavigationBar.setBackgroundColorAsync("#F2F5F3");
 
   const handleLogin = async (values) => {
     try {
@@ -37,7 +40,6 @@ const LoginPage = ({ onLogin }) => {
       const storedPassword = admin.rows.item(0).password;
 
       if (inputPassword === storedPassword) {
-        // Save login state to AsyncStorage
         await AsyncStorage.setItem("isLoggedIn", "true");
         onLogin(true);
       } else {
@@ -52,115 +54,164 @@ const LoginPage = ({ onLogin }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" backgroundColor="#F2F5F3" />
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>Adil Fashion</Text>
-        <Formik
-          initialValues={{ password: "" }}
-          validationSchema={LoginSchema}
-          onSubmit={(values) => handleLogin(values)}
-        >
-          {({
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            values,
-            errors,
-            touched,
-          }) => (
-            <View>
-              <TextInput
-                style={[
-                  styles.input,
-                  touched.password && errors.password
-                    ? styles.inputError
-                    : null,
-                  isPasswordIncorrect ? styles.inputError : null,
-                ]}
-                onChangeText={(text) => {
-                  handleChange("password")(text);
-                }}
-                onBlur={handleBlur("password")}
-                value={values.password}
-                placeholder="Password"
-                secureTextEntry
-                error={
-                  isPasswordIncorrect
-                    ? "Password is incorrect!"
-                    : errors.password
-                }
-              />
-              {touched.password && errors.password && (
-                <Text style={styles.error}>{errors.password}</Text>
-              )}
-              {isPasswordIncorrect && (
-                <Text style={styles.error}>Password is incorrect!</Text>
-              )}
-              <TouchableOpacity
-                style={styles.button}
-                onPress={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Login</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <StatusBar style="dark" backgroundColor="#F8F9FA" />
+      <View style={styles.contentContainer}>
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>
+            Please enter your password to continue
+          </Text>
+
+          <Formik
+            initialValues={{ password: "" }}
+            validationSchema={LoginSchema}
+            onSubmit={(values) => handleLogin(values)}
+          >
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+            }) => (
+              <View style={styles.formContent}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    touched.password && errors.password
+                      ? styles.inputError
+                      : null,
+                    isPasswordIncorrect ? styles.inputError : null,
+                  ]}
+                  onChangeText={(text) => {
+                    handleChange("password")(text);
+                    setIsPasswordIncorrect(false);
+                  }}
+                  onBlur={handleBlur("password")}
+                  value={values.password}
+                  placeholder="Enter your password"
+                  secureTextEntry
+                  mode="outlined"
+                  outlineColor="#0083D0"
+                  activeOutlineColor="#0083D0"
+                  error={
+                    isPasswordIncorrect || (touched.password && errors.password)
+                  }
+                  left={<TextInput.Icon icon="lock" color="#6C757D" />}
+                  theme={{ roundness: 16 }}
+                />
+                {touched.password && errors.password && (
+                  <Text style={styles.error}>{errors.password}</Text>
                 )}
-              </TouchableOpacity>
-            </View>
-          )}
-        </Formik>
+                {isPasswordIncorrect && (
+                  <Text style={styles.error}>
+                    Incorrect password. Please try again.
+                  </Text>
+                )}
+                <TouchableOpacity
+                  style={[styles.button, loading && styles.buttonDisabled]}
+                  onPress={handleSubmit}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Sign In</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+          </Formik>
+        </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8F9FA",
+  },
+  contentContainer: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F2F5F3",
-    width: "100%",
+    backgroundColor: "#F8F9FA",
   },
   formContainer: {
     backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    width: "85%",
+    padding: 24,
+    borderRadius: 16,
+    width: width * 0.9,
     maxWidth: 400,
-    elevation: 10,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: "700",
+    marginBottom: 8,
+    textAlign: "center",
+    color: "#212529",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#6C757D",
+    marginBottom: 24,
     textAlign: "center",
   },
+  formContent: {
+    width: "100%",
+  },
   input: {
-    marginBottom: 10,
-    borderRadius: 5,
+    marginBottom: 16,
     backgroundColor: "white",
+    fontSize: 16,
+    borderRadius: 16,
   },
   inputError: {
-    borderColor: "red",
+    borderColor: "#DC3545",
   },
   error: {
-    color: "red",
-    fontSize: 12,
+    color: "#DC3545",
+    fontSize: 14,
+    marginBottom: 16,
+    marginLeft: 4,
   },
   button: {
-    backgroundColor: "#3498db",
-    padding: 15,
-    borderRadius: 5,
-    marginTop: 10,
+    backgroundColor: "#4A90E2",
+    padding: 16,
+    borderRadius: 16,
     alignItems: "center",
+    marginTop: 8,
+    elevation: 2,
+    shadowColor: "#4A90E2",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  buttonDisabled: {
+    backgroundColor: "#A0C4F3",
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 18,
+    fontWeight: "600",
     textAlign: "center",
   },
 });

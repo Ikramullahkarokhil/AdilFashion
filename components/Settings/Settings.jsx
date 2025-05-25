@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Alert } from "react-native";
 import Backup from "../BackupAndRestore/Backup";
 import ResetPassword from "../ResetPassword/ResetPassword";
 import { Button } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const Settings = ({ onLogout }) => {
   const [isResetPasswordVisible, setIsResetPasswordVisible] = useState(false);
@@ -40,6 +41,10 @@ const Settings = ({ onLogout }) => {
           buttonColor="white"
           onPress={toggleResetPasswordModal}
           accessibilityLabel="Change Password"
+          textColor="black"
+          icon={() => (
+            <MaterialCommunityIcons name="lock-reset" size={18} color="black" />
+          )}
         >
           Change Password
         </Button>
@@ -58,6 +63,7 @@ const Settings = ({ onLogout }) => {
           buttonColor="white"
           onPress={handleLogout}
           accessibilityLabel="Logout"
+          textColor="black"
         >
           Logout
         </Button>

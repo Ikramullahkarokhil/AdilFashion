@@ -351,6 +351,7 @@ export default function Restore() {
         onPress={pickFile}
         disabled={loading}
         buttonColor="white"
+        textColor="black"
       >
         Restore Data
       </Button>

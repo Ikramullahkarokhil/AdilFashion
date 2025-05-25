@@ -158,6 +158,8 @@ const Backup = () => {
         onPress={showConfirmDialog}
         disabled={loading}
         style={styles.button}
+        textColor="white"
+        buttonColor="#0083D0"
       >
         Backup Customer Data
       </Button>

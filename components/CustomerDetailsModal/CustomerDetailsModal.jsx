@@ -8,20 +8,8 @@ import {
   ActivityIndicator,
   Dimensions,
 } from "react-native";
-import {
-  Button,
-  Title,
-  Divider,
-  Checkbox,
-  IconButton,
-} from "react-native-paper";
+import { Button, Divider, Checkbox, IconButton } from "react-native-paper";
 import UpdateCustomerModel from "../UpdateCustomerModel/UpdateCustomerModel";
-import {
-  differenceInDays,
-  differenceInMonths,
-  differenceInYears,
-  format,
-} from "date-fns";
 
 const { width, height } = Dimensions.get("window");
 
@@ -33,35 +21,41 @@ const CustomerDetailsModal = ({
 }) => {
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
 
-  // Memoize expensive calculations to improve performance
+  // Memoize expensive calculations
   const customerDetails = useMemo(() => {
     if (!customer) return null;
 
     const jeebTunban = customer.jeebTunban === 1;
     const yakhanBinValue = customer.yakhanBin === 1 ? "بن دار ," : "";
 
-    // Calculate time since registration once
+    // Calculate time since registration using native JavaScript Date
     const currentDate = new Date();
-    const registrationDate = new Date(customer.regestrationDate);
-    const diffInDays = differenceInDays(currentDate, registrationDate);
-    const diffInMonths = differenceInMonths(currentDate, registrationDate);
-    const diffInYears = differenceInYears(currentDate, registrationDate);
+    const registrationDate = new Date(customer.regestrationDate); // Typo: should be 'registrationDate'
+    const diffInTime = currentDate - registrationDate;
+    const diffInDays = Math.floor(diffInTime / (1000 * 60 * 60 * 24));
+    const diffInMonths = Math.floor(diffInDays / 30); // Approximation
+    const diffInYears = Math.floor(diffInDays / 365);
+
+    // Format date to yyyy-MM-dd
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
 
     let timeSinceRegistration;
     if (diffInYears > 0) {
-      timeSinceRegistration = `${format(
-        registrationDate,
-        "yyyy-MM-dd"
+      timeSinceRegistration = `${formatDate(
+        registrationDate
       )} (${diffInYears} year${diffInYears > 1 ? "s" : ""} ago)`;
     } else if (diffInMonths > 0) {
-      timeSinceRegistration = `${format(
-        registrationDate,
-        "yyyy-MM-dd"
+      timeSinceRegistration = `${formatDate(
+        registrationDate
       )} (${diffInMonths} month${diffInMonths > 1 ? "s" : ""} ago)`;
     } else {
-      timeSinceRegistration = `${format(
-        registrationDate,
-        "yyyy-MM-dd"
+      timeSinceRegistration = `${formatDate(
+        registrationDate
       )} (${diffInDays} day${diffInDays > 1 ? "s" : ""} ago)`;
     }
 
@@ -72,7 +66,7 @@ const CustomerDetailsModal = ({
     };
   }, [customer]);
 
-  // Use callbacks for event handlers to prevent unnecessary re-renders
+  // Event handlers
   const handleUpdate = useCallback(() => {
     setUpdateModalVisible(true);
   }, []);
@@ -84,7 +78,7 @@ const CustomerDetailsModal = ({
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} animationType="fade" transparent={true}>
+    <Modal visible={visible} animationType="fade">
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           {isLoading ? (
@@ -103,9 +97,9 @@ const CustomerDetailsModal = ({
                   onPress={onClose}
                   style={styles.closeButton}
                 />
-                <Title style={styles.modalTitle}>
+                <Text style={styles.modalTitle}>
                   قد اندام : {customer.name}
-                </Title>
+                </Text>
               </View>
 
               <ScrollView
@@ -159,7 +153,6 @@ const CustomerDetailsModal = ({
                           customerDetails.jeebTunban ? "checked" : "unchecked"
                         }
                         color="#0083D0"
-                        disabled
                       />
                     }
                   />
@@ -180,6 +173,8 @@ const CustomerDetailsModal = ({
                   style={styles.updateButton}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
+                  buttonColor="#0083D0"
+                  textColor="white"
                 >
                   Update
                 </Button>
@@ -189,6 +184,8 @@ const CustomerDetailsModal = ({
                   style={styles.closeModalButton}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
+                  buttonColor="white"
+                  textColor="black"
                 >
                   Close
                 </Button>
@@ -238,7 +235,6 @@ const DetailRow = ({ label, value }) => (
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
     flex: 1,
@@ -254,7 +250,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F2F5F3",
   },
   closeButton: {
     position: "absolute",
@@ -311,17 +307,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F2F5F3",
   },
   updateButton: {
     flex: 1,
     marginRight: 8,
-    backgroundColor: "#0083D0",
   },
   closeModalButton: {
     flex: 1,
     marginLeft: 8,
-    borderColor: "#0083D0",
   },
   buttonContent: {
     height: 44,
