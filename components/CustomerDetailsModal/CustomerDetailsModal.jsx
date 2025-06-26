@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Button, Divider, Checkbox, IconButton } from "react-native-paper";
 import UpdateCustomerModel from "../UpdateCustomerModel/UpdateCustomerModel";
-import db from "../../Database";
+import { db, deleteCustomer } from "../../Database";
 import ConfirmationDialog from "../ConfirmationDialog/ConfirmationDialog";
 
 const { width, height } = Dimensions.get("window");
@@ -75,25 +75,12 @@ const CustomerDetailsModal = ({
     setUpdateModalVisible(true);
   }, []);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     const { id } = customer;
-    db.transaction((tx) => {
-      tx.executeSql(
-        `DELETE FROM customer WHERE id = ?`,
-        [id],
-        () => {
-          onClose();
-          ToastAndroid.show(
-            "Customer deleted successfully!",
-            ToastAndroid.SHORT
-          );
-        },
-        (error) => {
-          console.log("Error deleting customer:", error);
-        }
-      );
-    });
-  };
+    deleteCustomer({ id: id, table: "customer" });
+    ToastAndroid.show("Customer deleted successfully!", ToastAndroid.SHORT);
+    onClose();
+  });
 
   const handleCloseUpdateModal = useCallback(() => {
     setUpdateModalVisible(false);

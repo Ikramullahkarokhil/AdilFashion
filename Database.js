@@ -101,11 +101,9 @@ export const executeSql = async (sql, params = []) => {
   });
 };
 
-const deleteCustomer = ({ id, table }) => {
+export const deleteCustomer = ({ id, table }) => {
   db.transaction((tx) => {
-    tx.executeSql(`DELETE FROM ${table} WHERE id = ?`, [id], (error) => {
-      console.log("Error deleting customer:", error);
-    });
+    tx.executeSql(`DELETE FROM ${table} WHERE id = ?`, [id]);
   });
 };
 

@@ -7,11 +7,11 @@ import {
   Dimensions,
   ToastAndroid,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button, Divider, IconButton } from "react-native-paper";
 import UpdateWaskatModel from "../UpdateWaskatModel/UpdateWaskatModel";
 import ConfirmationDialog from "../ConfirmationDialog/ConfirmationDialog";
-import db from "../../Database";
+import db, { deleteCustomer } from "../../Database";
 
 const { width, height } = Dimensions.get("window");
 
@@ -53,25 +53,12 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
     setUpdateModalVisible(true);
   };
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     const { id } = customer;
-    db.transaction((tx) => {
-      tx.executeSql(
-        `DELETE FROM waskat WHERE id = ?`,
-        [id],
-        () => {
-          onClose();
-          ToastAndroid.show(
-            "Customer deleted successfully!",
-            ToastAndroid.SHORT
-          );
-        },
-        (error) => {
-          console.log("Error deleting customer:", error);
-        }
-      );
-    });
-  };
+    deleteCustomer({ id: id, table: "waskat" });
+    ToastAndroid.show("Customer deleted successfully!", ToastAndroid.SHORT);
+    onClose();
+  });
 
   const handleCloseUpdateModal = () => {
     setUpdateModalVisible(false);
