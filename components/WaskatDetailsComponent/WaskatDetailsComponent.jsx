@@ -5,16 +5,20 @@ import {
   Text,
   ScrollView,
   Dimensions,
+  ToastAndroid,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { Button, Divider, IconButton } from "react-native-paper";
 import UpdateWaskatModel from "../UpdateWaskatModel/UpdateWaskatModel";
+import ConfirmationDialog from "../ConfirmationDialog/ConfirmationDialog";
+import db from "../../Database";
 
 const { width, height } = Dimensions.get("window");
 
 const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
   const [timeSinceRegistration, setTimeSinceRegistration] = useState("");
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
 
   useEffect(() => {
     if (customer) {
@@ -47,6 +51,26 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
 
   const handleUpdate = () => {
     setUpdateModalVisible(true);
+  };
+
+  const handleDelete = () => {
+    const { id } = customer;
+    db.transaction((tx) => {
+      tx.executeSql(
+        `DELETE FROM waskat WHERE id = ?`,
+        [id],
+        () => {
+          onClose();
+          ToastAndroid.show(
+            "Customer deleted successfully!",
+            ToastAndroid.SHORT
+          );
+        },
+        (error) => {
+          console.log("Error deleting customer:", error);
+        }
+      );
+    });
   };
 
   const handleCloseUpdateModal = () => {
@@ -124,7 +148,7 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
               <View style={styles.buttonContainer}>
                 <Button
                   mode="contained"
-                  onPress={handleUpdate}
+                  onPress={() => setConfirmationVisible(true)}
                   style={styles.updateButton}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
@@ -165,6 +189,11 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
         visible={updateModalVisible}
         customerData={customer}
         onClose={handleCloseUpdateModal}
+      />
+      <ConfirmationDialog
+        visible={confirmationVisible}
+        onCancel={() => setConfirmationVisible(false)}
+        onConfirm={handleDelete}
       />
     </Modal>
   );

@@ -10,11 +10,9 @@ import {
 } from "react-native";
 import { Searchbar, Card, IconButton } from "react-native-paper";
 import CustomerDetailsModal from "../CustomerDetailsModal/CustomerDetailsModal";
-import ConfirmationDialog from "../ConfirmationDialog/ConfirmationDialog";
 import SelectDropdown from "react-native-select-dropdown";
 import WaskatDetailsComponent from "../WaskatDetailsComponent/WaskatDetailsComponent";
 import useStore from "../../store";
-import db from "../../Database";
 import { FlashList } from "@shopify/flash-list";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -34,11 +32,9 @@ const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [confirmationVisible, setConfirmationVisible] = useState(false);
   const flatListRef = useRef(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [isScrollingUp, setIsScrollingUp] = useState(false);
   const scrollTopOpacity = useRef(new Animated.Value(0)).current;
   const SCROLL_THRESHOLD = 500;
 
@@ -100,8 +96,6 @@ const Home = () => {
     (event) => {
       const currentScrollY = event.nativeEvent.contentOffset.y;
       const isScrollingUpNow = currentScrollY < lastScrollY;
-
-      setIsScrollingUp(isScrollingUpNow);
       setLastScrollY(currentScrollY);
 
       const shouldShowButton =
@@ -134,37 +128,6 @@ const Home = () => {
     setModalVisible(true);
   };
 
-  const handleDelete = (item) => {
-    setSelectedCustomer(item);
-    setConfirmationVisible(true);
-  };
-
-  const confirmDelete = () => {
-    if (!selectedCustomer) return;
-
-    const { id } = selectedCustomer;
-
-    db.transaction((tx) => {
-      tx.executeSql(
-        `DELETE FROM ${selectedOption} WHERE id = ?`,
-        [id],
-        () => {
-          ToastAndroid.show(
-            "Customer deleted successfully!",
-            ToastAndroid.SHORT
-          );
-          setModalVisible(false);
-          setConfirmationVisible(false);
-          fetchTotalRecords(selectedOption);
-          fetchData(selectedOption, searchQuery);
-        },
-        (error) => {
-          console.log("Error deleting customer:", error);
-        }
-      );
-    });
-  };
-
   const optionMapping = {
     کالا: "customer",
     واسکت: "waskat",
@@ -177,7 +140,7 @@ const Home = () => {
     };
   }, []);
 
-  const ListItem = React.memo(({ item, onPressDetails, onPressDelete }) => {
+  const ListItem = React.memo(({ item, onPressDetails }) => {
     return (
       <Card
         style={styles.card}
@@ -186,18 +149,6 @@ const Home = () => {
         onPress={() => onPressDetails(item)}
       >
         <View style={styles.cardDirection}>
-          <View style={styles.leftIcons}>
-            <IconButton
-              icon="eye"
-              iconColor="#0083D0"
-              onPress={() => onPressDetails(item)}
-            />
-            <IconButton
-              icon="delete"
-              iconColor="red"
-              onPress={() => onPressDelete(item)}
-            />
-          </View>
           <View style={styles.cardContent}>
             <Card.Content>
               <View style={styles.contentRow}>
@@ -222,13 +173,7 @@ const Home = () => {
   });
 
   const renderItem = useCallback(
-    ({ item }) => (
-      <ListItem
-        item={item}
-        onPressDetails={handleDetails}
-        onPressDelete={handleDelete}
-      />
-    ),
+    ({ item }) => <ListItem item={item} onPressDetails={handleDetails} />,
     []
   );
 
@@ -309,7 +254,6 @@ const Home = () => {
           visible={modalVisible}
           customer={selectedCustomer}
           onClose={() => setModalVisible(false)}
-          onDelete={handleDelete}
         />
       )}
 
@@ -318,15 +262,8 @@ const Home = () => {
           visible={modalVisible}
           customer={selectedCustomer}
           onClose={() => setModalVisible(false)}
-          onDelete={handleDelete}
         />
       )}
-
-      <ConfirmationDialog
-        visible={confirmationVisible}
-        onCancel={() => setConfirmationVisible(false)}
-        onConfirm={confirmDelete}
-      />
     </View>
   );
 };

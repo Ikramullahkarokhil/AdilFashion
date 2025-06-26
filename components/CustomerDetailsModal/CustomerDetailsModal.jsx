@@ -7,9 +7,12 @@ import {
   ScrollView,
   ActivityIndicator,
   Dimensions,
+  ToastAndroid,
 } from "react-native";
 import { Button, Divider, Checkbox, IconButton } from "react-native-paper";
 import UpdateCustomerModel from "../UpdateCustomerModel/UpdateCustomerModel";
+import db from "../../Database";
+import ConfirmationDialog from "../ConfirmationDialog/ConfirmationDialog";
 
 const { width, height } = Dimensions.get("window");
 
@@ -20,6 +23,7 @@ const CustomerDetailsModal = ({
   isLoading = false,
 }) => {
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
 
   // Memoize expensive calculations
   const customerDetails = useMemo(() => {
@@ -70,6 +74,26 @@ const CustomerDetailsModal = ({
   const handleUpdate = useCallback(() => {
     setUpdateModalVisible(true);
   }, []);
+
+  const handleDelete = () => {
+    const { id } = customer;
+    db.transaction((tx) => {
+      tx.executeSql(
+        `DELETE FROM customer WHERE id = ?`,
+        [id],
+        () => {
+          onClose();
+          ToastAndroid.show(
+            "Customer deleted successfully!",
+            ToastAndroid.SHORT
+          );
+        },
+        (error) => {
+          console.log("Error deleting customer:", error);
+        }
+      );
+    });
+  };
 
   const handleCloseUpdateModal = useCallback(() => {
     setUpdateModalVisible(false);
@@ -169,7 +193,7 @@ const CustomerDetailsModal = ({
               <View style={styles.buttonContainer}>
                 <Button
                   mode="contained"
-                  onPress={handleUpdate}
+                  onPress={() => setConfirmationVisible(true)}
                   style={styles.updateButton}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
@@ -210,6 +234,11 @@ const CustomerDetailsModal = ({
         visible={updateModalVisible}
         customerData={customer}
         onClose={handleCloseUpdateModal}
+      />
+      <ConfirmationDialog
+        visible={confirmationVisible}
+        onCancel={() => setConfirmationVisible(false)}
+        onConfirm={handleDelete}
       />
     </Modal>
   );
