@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import {
   Modal,
   View,
@@ -8,6 +14,8 @@ import {
   ActivityIndicator,
   Dimensions,
   ToastAndroid,
+  Animated,
+  TouchableOpacity,
 } from "react-native";
 import { Button, Divider, Checkbox, IconButton } from "react-native-paper";
 import UpdateCustomerModel from "../UpdateCustomerModel/UpdateCustomerModel";
@@ -24,6 +32,28 @@ const CustomerDetailsModal = ({
 }) => {
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [menuModalVisible, setMenuModalVisible] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(scaleAnim, {
+      toValue: menuModalVisible ? 1 : 0,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
+  }, [menuModalVisible, scaleAnim]);
+
+  const handleMenuOpen = () => setMenuModalVisible(true);
+  const handleMenuClose = () => setMenuModalVisible(false);
+  const handleUpdate = () => {
+    setMenuModalVisible(false);
+    setUpdateModalVisible(true);
+  };
+  const handleDelete = () => {
+    setMenuModalVisible(false);
+    setConfirmationVisible(true);
+  };
 
   // Memoize expensive calculations
   const customerDetails = useMemo(() => {
@@ -71,17 +101,6 @@ const CustomerDetailsModal = ({
   }, [customer]);
 
   // Event handlers
-  const handleUpdate = useCallback(() => {
-    setUpdateModalVisible(true);
-  }, []);
-
-  const handleDelete = useCallback(() => {
-    const { id } = customer;
-    deleteCustomer({ id: id, table: "customer" });
-    ToastAndroid.show("Customer deleted successfully!", ToastAndroid.SHORT);
-    onClose();
-  });
-
   const handleCloseUpdateModal = useCallback(() => {
     setUpdateModalVisible(false);
   }, []);
@@ -180,14 +199,14 @@ const CustomerDetailsModal = ({
               <View style={styles.buttonContainer}>
                 <Button
                   mode="contained"
-                  onPress={() => setConfirmationVisible(true)}
+                  onPress={handleMenuOpen}
                   style={styles.updateButton}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
                   buttonColor="#0083D0"
                   textColor="white"
                 >
-                  Update
+                  Actions
                 </Button>
                 <Button
                   mode="outlined"
@@ -217,15 +236,66 @@ const CustomerDetailsModal = ({
         </View>
       </View>
 
+      <Modal
+        visible={menuModalVisible}
+        transparent
+        animationType="none"
+        onRequestClose={handleMenuClose}
+      >
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={handleMenuClose}
+        >
+          <Animated.View
+            style={[
+              styles.menuContainer,
+              { transform: [{ scale: scaleAnim }] },
+            ]}
+          >
+            <View style={styles.menuContent}>
+              <TouchableOpacity style={styles.menuItem} onPress={handleUpdate}>
+                <IconButton
+                  icon="pencil"
+                  size={24}
+                  iconColor="#0083D0"
+                  style={styles.menuIcon}
+                />
+                <Text style={styles.menuItemText}>Update</Text>
+              </TouchableOpacity>
+              <Divider style={styles.menuDivider} />
+              <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
+                <IconButton
+                  icon="delete"
+                  size={24}
+                  iconColor="#FF5252"
+                  style={styles.menuIcon}
+                />
+                <Text style={[styles.menuItemText, { color: "#FF5252" }]}>
+                  Delete
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+
       <UpdateCustomerModel
         visible={updateModalVisible}
         customerData={customer}
-        onClose={handleCloseUpdateModal}
+        onClose={() => setUpdateModalVisible(false)}
       />
       <ConfirmationDialog
         visible={confirmationVisible}
         onCancel={() => setConfirmationVisible(false)}
-        onConfirm={handleDelete}
+        onConfirm={() => {
+          deleteCustomer({ id: customer.id, table: "customer" });
+          ToastAndroid.show(
+            "Customer deleted successfully!",
+            ToastAndroid.SHORT
+          );
+          onClose();
+        }}
       />
     </Modal>
   );
@@ -249,56 +319,35 @@ const DetailRow = ({ label, value }) => (
 );
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-  },
-  modalContent: {
-    flex: 1,
-    backgroundColor: "white",
-    width: width,
-    height: height,
-  },
+  modalContainer: { flex: 1 },
+  modalContent: { flex: 1, backgroundColor: "white", width, height },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
     backgroundColor: "#F2F5F3",
   },
-  closeButton: {
-    position: "absolute",
-    left: 8,
-    top: 8,
-  },
+  closeButton: { position: "absolute", left: 8, top: 8 },
   modalTitle: {
+    flex: 1,
     fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
     color: "#333",
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-    paddingBottom: 20,
-  },
-  detailsContainer: {
-    padding: 16,
-  },
+  scrollView: { flex: 1 },
+  scrollViewContent: { flexGrow: 1, paddingBottom: 20 },
+  detailsContainer: { padding: 16 },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 3,
+    paddingVertical: 6,
     width: "100%",
   },
-  divider: {
-    marginVertical: 4,
-  },
+  divider: { marginVertical: 4 },
   label: {
     fontWeight: "700",
     fontSize: 16,
@@ -307,10 +356,7 @@ const styles = StyleSheet.create({
     width: "40%",
     paddingLeft: 8,
   },
-  valueContainer: {
-    flex: 1,
-    alignItems: "flex-start",
-  },
+  valueContainer: { flex: 1, alignItems: "flex-start" },
   value: {
     fontSize: 16,
     fontWeight: "500",
@@ -325,45 +371,42 @@ const styles = StyleSheet.create({
     borderTopColor: "#f0f0f0",
     backgroundColor: "#F2F5F3",
   },
-  updateButton: {
-    flex: 1,
-    marginRight: 8,
+  updateButton: { flex: 1, marginRight: 8 },
+  closeModalButton: { flex: 1, marginLeft: 8 },
+  buttonContent: { height: 44 },
+  buttonLabel: { fontSize: 16, fontWeight: "bold" },
+  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+  loadingText: { marginTop: 16, fontSize: 16, color: "#555" },
+  errorContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+  errorText: { marginBottom: 16, fontSize: 16, color: "#555" },
+  errorButton: { marginTop: 16, backgroundColor: "#0083D0" },
+  menuOverlay: { flex: 1 },
+  menuContainer: {
+    position: "absolute",
+    bottom: 80,
+    alignSelf: "center",
+    width: width * 0.6,
+    maxWidth: 300,
   },
-  closeModalButton: {
-    flex: 1,
-    marginLeft: 8,
+  menuContent: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    elevation: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
   },
-  buttonContent: {
-    height: 44,
-  },
-  buttonLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  loadingContainer: {
-    flex: 1,
+  menuItem: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    minHeight: 56,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#555",
-  },
-  errorContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorText: {
-    marginBottom: 16,
-    fontSize: 16,
-    color: "#555",
-  },
-  errorButton: {
-    marginTop: 16,
-    backgroundColor: "#0083D0",
-  },
+  menuIcon: { margin: 0, marginRight: 12 },
+  menuItemText: { fontSize: 16, fontWeight: "500", color: "#333", flex: 1 },
+  menuDivider: { marginHorizontal: 20 },
 });
 
 export default React.memo(CustomerDetailsModal);
