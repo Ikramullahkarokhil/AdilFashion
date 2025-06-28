@@ -11,7 +11,7 @@ import { TextInput } from "react-native-paper";
 
 import SelectDropdown from "react-native-select-dropdown";
 import { Formik } from "formik";
-import db from "../../Database";
+import { executeSql } from "../../Database";
 import * as Yup from "yup";
 
 const validationSchema = Yup.object().shape({
@@ -110,43 +110,34 @@ const Waskat = () => {
 
   const selectYakhan = ["وی v", "ګول", "یخندار"];
 
-  const saveCustomerWaskat = (values, resetForm) => {
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          "INSERT INTO waskat (name, phoneNumber, qad, yakhan, yakhanValue,shana, baghal,kamar, soreen,astin, farmaish, regestrationDate) VALUES (?,?,?, ?, ?, ?, ?, ?, ?, ?,?,?)",
-          [
-            values.name,
-            values.phoneNumber,
-            values.qad,
-            values.yakhan,
-            values.yakhanValue,
-            values.shana,
-            values.baghal,
-            values.kamar,
-            values.soreen,
-            values.astin,
-            values.farmaish,
-            currentDate,
-          ],
-          (_, resultSet) => {
-            if (resultSet.rowsAffected > 0) {
-              ToastAndroid.show("مشتری موفقانه اضافه شد!", ToastAndroid.SHORT);
-              resetForm();
-              setResetFields(!resetFields);
-            } else {
-              console.log("Error saving customer.");
-            }
-          },
-          (_, error) => {
-            console.error("Error inserting customer:", error);
-          }
-        );
-      },
-      (error) => {
-        console.error("Transaction error:", error);
-      }
-    );
+  const saveCustomerWaskat = async (values, resetForm) => {
+    const currentDate = getCurrentDate();
+
+    try {
+      await executeSql(
+        "INSERT INTO waskat (name, phoneNumber, qad, yakhan, yakhanValue, shana, baghal, kamar, soreen, astin, farmaish, regestrationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        [
+          values.name,
+          values.phoneNumber,
+          values.qad,
+          values.yakhan,
+          values.yakhanValue,
+          values.shana,
+          values.baghal,
+          values.kamar,
+          values.soreen,
+          values.astin,
+          values.farmaish,
+          currentDate,
+        ]
+      );
+
+      ToastAndroid.show("مشتری موفقانه اضافه شد!", ToastAndroid.SHORT);
+      resetForm();
+      setResetFields(!resetFields);
+    } catch (error) {
+      console.error("Error inserting customer:", error);
+    }
   };
 
   return (

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { Formik } from "formik";
-import db from "../../Database";
+import { executeSql } from "../../Database";
 import * as Yup from "yup";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -23,7 +23,7 @@ const DynamicInputField = ({
 
   secureTextEntry,
 }) => {
-  const [setIsFocused] = React.useState(false);
+  const [isFocused, setIsFocused] = React.useState(false);
 
   const handleInputChange = (inputValue) => {
     handleChange(name)(inputValue);
@@ -80,41 +80,37 @@ const ResetPassword = ({ isVisible, onClose }) => {
       .oneOf([Yup.ref("newPassword"), null], "Passwords must match"),
   });
 
-  const handleResetPassword = (values, { resetForm, setFieldError }) => {
+  const handleResetPassword = async (values, { resetForm, setFieldError }) => {
     const { currentPassword, newPassword } = values;
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          "SELECT * FROM admin WHERE password = ?",
-          [currentPassword],
-          (_, { rows }) => {
-            if (rows.length > 0) {
-              tx.executeSql(
-                "UPDATE admin SET password = ? WHERE password = ?",
-                [newPassword, currentPassword],
-                (_, { rowsAffected }) => {
-                  if (rowsAffected > 0) {
-                    ToastAndroid.show(
-                      "Password changed successfully!",
-                      ToastAndroid.SHORT
-                    );
-                    resetForm(); // Reset form values
-                    onClose(); // Close the modal
-                  } else {
-                    console.log("Failed to update password");
-                  }
-                }
-              );
-            } else {
-              setFieldError("currentPassword", "Incorrect password");
-            }
-          }
+
+    try {
+      const result = await executeSql(
+        "SELECT * FROM admin WHERE password = ?",
+        [currentPassword]
+      );
+
+      if (result.rows.length > 0) {
+        const updateResult = await executeSql(
+          "UPDATE admin SET password = ? WHERE password = ?",
+          [newPassword, currentPassword]
         );
-      },
-      (error) => {
-        console.log("Transaction error:", error);
+
+        if (updateResult.rowsAffected > 0) {
+          ToastAndroid.show(
+            "Password changed successfully!",
+            ToastAndroid.SHORT
+          );
+          resetForm(); // Reset form values
+          onClose(); // Close the modal
+        } else {
+          console.log("Failed to update password");
+        }
+      } else {
+        setFieldError("currentPassword", "Incorrect password");
       }
-    );
+    } catch (error) {
+      console.log("Error during password reset:", error);
+    }
   };
 
   return (

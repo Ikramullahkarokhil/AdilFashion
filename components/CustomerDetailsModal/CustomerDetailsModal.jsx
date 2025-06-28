@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { Button, Divider, Checkbox, IconButton } from "react-native-paper";
 import UpdateCustomerModel from "../UpdateCustomerModel/UpdateCustomerModel";
-import { db, deleteCustomer } from "../../Database";
+import { deleteCustomer } from "../../Database";
 import ConfirmationDialog from "../ConfirmationDialog/ConfirmationDialog";
 
 const { width, height } = Dimensions.get("window");

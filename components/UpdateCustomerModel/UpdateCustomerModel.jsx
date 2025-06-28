@@ -9,8 +9,7 @@ import {
 import { Button, Checkbox, TextInput } from "react-native-paper";
 import SelectDropdown from "react-native-select-dropdown";
 import { Formik } from "formik";
-import db from "../../Database";
-import * as NavigationBar from "expo-navigation-bar";
+import { executeSql } from "../../Database";
 
 const DynamicSelectField = ({
   name,
@@ -91,7 +90,6 @@ const UpdateCustomerModel = ({ customerData, onClose, visible }) => {
   const [jeebTunban, setJeebTunban] = useState(false);
   const [yakhanBin, setYakhanBin] = useState(false);
   const customerId = customerData.id;
-  NavigationBar.setBackgroundColorAsync("#F2F5F3");
 
   useEffect(() => {
     if (customerData) {
@@ -164,7 +162,7 @@ const UpdateCustomerModel = ({ customerData, onClose, visible }) => {
   const selectJeeb = ["2 جیب بغل 1 پیشرو", "2 جیب بغل"];
   const selectTunbanStyle = ["تنبان آزاد", "تنبان متوسط", "تنبان بلوچی"];
 
-  const saveCustomer = (values, resetForm) => {
+  const saveCustomer = async (values, resetForm) => {
     const newJeebTunban = jeebTunban ? 1 : 0;
     const newYakhanBin = yakhanBin ? 1 : 0;
     const currentDate = getCurrentDate();
@@ -189,77 +187,66 @@ const UpdateCustomerModel = ({ customerData, onClose, visible }) => {
       tunbanStyle,
     } = values;
 
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          `
-          UPDATE customer
-          SET 
-            name = ?,
-            phoneNumber = ?,
-            qad = ?,
-            barDaman = ?,
-            baghal = ?,
-            shana = ?,
-            astin = ?,
-            tunban = ?,
-            pacha = ?,
-            yakhan = ?,
-            yakhanValue = ?,
-            yakhanBin = ?,
-            farmaish = ?,
-            daman = ?,
-            caff = ?,
-            caffValue = ?,
-            jeeb = ?,
-            tunbanStyle = ?,
-            jeebTunban = ?,
-            regestrationDate = ?
-          WHERE id = ?
-          `,
-          [
-            name,
-            phoneNumber,
-            qad,
-            barDaman,
-            baghal,
-            shana,
-            astin,
-            tunban,
-            pacha,
-            yakhan,
-            yakhanValue,
-            newYakhanBin,
-            farmaish,
-            daman,
-            caff,
-            caffValue,
-            jeeb,
-            tunbanStyle,
-            newJeebTunban,
-            currentDate,
-            customerId,
-          ],
-          (_, result) => {
-            console.log("Customer updated successfully:");
-            ToastAndroid.show(
-              "مشتری موفقانه به روز رسانی شد!",
-              ToastAndroid.SHORT
-            );
-            resetForm();
-            onClose();
-          },
-          (_, error) => {
-            console.log("Error updating customer:", error);
-            // Handle error here
-          }
-        );
-      },
-      (error) => {
-        console.log("Transaction error:", error);
-        // Handle transaction error here
-      }
-    );
+    try {
+      await executeSql(
+        `
+        UPDATE customer
+        SET 
+          name = ?,
+          phoneNumber = ?,
+          qad = ?,
+          barDaman = ?,
+          baghal = ?,
+          shana = ?,
+          astin = ?,
+          tunban = ?,
+          pacha = ?,
+          yakhan = ?,
+          yakhanValue = ?,
+          yakhanBin = ?,
+          farmaish = ?,
+          daman = ?,
+          caff = ?,
+          caffValue = ?,
+          jeeb = ?,
+          tunbanStyle = ?,
+          jeebTunban = ?,
+          regestrationDate = ?
+        WHERE id = ?
+        `,
+        [
+          name,
+          phoneNumber,
+          qad,
+          barDaman,
+          baghal,
+          shana,
+          astin,
+          tunban,
+          pacha,
+          yakhan,
+          yakhanValue,
+          newYakhanBin,
+          farmaish,
+          daman,
+          caff,
+          caffValue,
+          jeeb,
+          tunbanStyle,
+          newJeebTunban,
+          currentDate,
+          customerId,
+        ]
+      );
+
+      console.log("Customer updated successfully:");
+      ToastAndroid.show("مشتری موفقانه به روز رسانی شد!", ToastAndroid.SHORT);
+      resetForm();
+      onClose();
+    } catch (error) {
+      console.log("Error updating customer:", error);
+      // Handle error here
+    }
   };
 
   return (

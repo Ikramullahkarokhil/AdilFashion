@@ -8,10 +8,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { TextInput, Checkbox } from "react-native-paper";
-
 import SelectDropdown from "react-native-select-dropdown";
 import { Formik } from "formik";
-import db from "../../Database";
+import { executeSql } from "../../Database";
 import * as Yup from "yup";
 
 const validationSchema = Yup.object().shape({
@@ -140,53 +139,48 @@ const AddCustomer = () => {
   const selectJeeb = ["2 جیب بغل 1 پیشرو", "2 جیب بغل"];
   const selectTunbanStyle = ["تنبان آزاد", "تنبان متوسط", "تنبان بلوچی"];
 
-  const saveCustomer = (values, resetForm) => {
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          "INSERT INTO customer (name, phoneNumber, qad, barDaman, baghal, shana, astin, tunban, pacha, yakhan, yakhanValue,yakhanBin, farmaish, daman, caff, caffValue, jeeb, tunbanStyle, jeebTunban, regestrationDate) VALUES (?,?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          [
-            values.name,
-            values.phoneNumber,
-            values.qad,
-            values.barDaman,
-            values.baghal,
-            values.shana,
-            values.astin,
-            values.tunban,
-            values.pacha,
-            values.yakhan,
-            values.yakhanValue,
-            yakhanBinChecked ? 1 : 0,
-            values.farmaish,
-            values.daman,
-            values.caff,
-            values.caffValue,
-            values.jeeb,
-            values.tunbanStyle,
-            jeebTunbanChecked ? 1 : 0,
-            currentDate,
-          ],
-          (_, resultSet) => {
-            if (resultSet.rowsAffected > 0) {
-              ToastAndroid.show("مشتری موفقانه اضافه شد!", ToastAndroid.SHORT);
-              resetForm();
-              setResetFields(!resetFields);
-              setJeebTunbanChecked(false);
-              setYakhanBinChecked(false);
-            } else {
-              console.log("Error saving customer.");
-            }
-          },
-          (_, error) => {
-            console.error("Error inserting customer:", error);
-          }
-        );
-      },
-      (error) => {
-        console.error("Transaction error:", error);
+  const saveCustomer = async (values, resetForm) => {
+    const currentDate = getCurrentDate();
+
+    try {
+      const resultSet = await executeSql(
+        "INSERT INTO customer (name, phoneNumber, qad, barDaman, baghal, shana, astin, tunban, pacha, yakhan, yakhanValue, yakhanBin, farmaish, daman, caff, caffValue, jeeb, tunbanStyle, jeebTunban, regestrationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        [
+          values.name,
+          values.phoneNumber,
+          values.qad,
+          values.barDaman,
+          values.baghal,
+          values.shana,
+          values.astin,
+          values.tunban,
+          values.pacha,
+          values.yakhan,
+          values.yakhanValue,
+          yakhanBinChecked ? 1 : 0,
+          values.farmaish,
+          values.daman,
+          values.caff,
+          values.caffValue,
+          values.jeeb,
+          values.tunbanStyle,
+          jeebTunbanChecked ? 1 : 0,
+          currentDate,
+        ]
+      );
+
+      if (resultSet.rowsAffected > 0) {
+        ToastAndroid.show("مشتری موفقانه اضافه شد!", ToastAndroid.SHORT);
+        resetForm();
+        setResetFields(!resetFields);
+        setJeebTunbanChecked(false);
+        setYakhanBinChecked(false);
+      } else {
+        console.log("Error saving customer.");
       }
-    );
+    } catch (error) {
+      console.error("Error inserting customer:", error);
+    }
   };
 
   return (

@@ -12,26 +12,17 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import * as Haptics from "expo-haptics";
 import Restore from "./Restore";
-import db from "../../Database";
+import { executeSql } from "../../Database";
 
 // Utility functions moved outside component for better performance
 const exportDataToJson = async (tableName) => {
   const query = `SELECT * FROM ${tableName}`;
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        query,
-        [],
-        (_, { rows }) => {
-          const data = rows._array;
-          resolve(data);
-        },
-        (_, error) => {
-          reject(error);
-        }
-      );
-    });
-  });
+  try {
+    const results = await executeSql(query);
+    return results.rows._array;
+  } catch (error) {
+    throw new Error(`Error exporting data from ${tableName}: ${error.message}`);
+  }
 };
 
 const saveJsonToFile = async (jsonData) => {

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useCallback } from "react";
 import {
   View,
@@ -11,17 +9,12 @@ import {
 } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as DocumentPicker from "expo-document-picker";
-import {
-  Button,
-  ProgressBar,
-  Surface,
-  Portal,
-  Dialog,
-} from "react-native-paper";
+import { Button, ProgressBar, Portal, Dialog } from "react-native-paper";
 import * as Haptics from "expo-haptics";
-import db from "../../Database";
+import { executeSql } from "../../Database"; // Importing the executeSql function
 
 export default function Restore() {
+  // State variables for managing UI and restore process
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
@@ -29,7 +22,7 @@ export default function Restore() {
   const [restoreStats, setRestoreStats] = useState({ customers: 0, waskat: 0 });
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Provide haptic feedback based on platform
+  // Trigger haptic feedback for user interaction
   const triggerHapticFeedback = async (type = "success") => {
     try {
       if (type === "success") {
@@ -46,17 +39,16 @@ export default function Restore() {
     }
   };
 
-  // Show toast message with platform check
+  // Show toast notifications based on platform
   const showToast = (message) => {
     if (Platform.OS === "android") {
       ToastAndroid.show(message, ToastAndroid.SHORT);
     } else {
-      // For iOS, we could use an alternative
-      Alert.alert("Notification", message);
+      Alert.alert("Notification", message); // Alternative for iOS
     }
   };
 
-  // Validate backup data structure
+  // Validate the structure of the backup data
   const validateBackupData = (data) => {
     if (!data) return false;
     if (!data.customers || !Array.isArray(data.customers)) return false;
@@ -64,169 +56,139 @@ export default function Restore() {
     return true;
   };
 
-  // Insert customer data with proper error handling and transaction management
+  // Insert customer data into the database
   const insertCustomerData = useCallback(async (jsonData) => {
-    return new Promise((resolve, reject) => {
-      let insertedCount = 0;
-      let errorCount = 0;
+    let insertedCount = 0;
+    let errorCount = 0;
 
-      db.transaction(
-        (tx) => {
-          jsonData.forEach((item) => {
-            const {
-              id,
-              name,
-              phoneNumber,
-              qad,
-              barDaman,
-              baghal,
-              shana,
-              astin,
-              tunban,
-              pacha,
-              yakhan,
-              yakhanValue,
-              farmaish,
-              daman,
-              caff,
-              caffValue,
-              jeeb,
-              tunbanStyle,
-              jeebTunban,
-              regestrationDate,
-            } = item;
+    for (const item of jsonData) {
+      const {
+        id,
+        name,
+        phoneNumber,
+        qad,
+        barDaman,
+        baghal,
+        shana,
+        astin,
+        tunban,
+        pacha,
+        yakhan,
+        yakhanValue,
+        farmaish,
+        daman,
+        caff,
+        caffValue,
+        jeeb,
+        tunbanStyle,
+        jeebTunban,
+        regestrationDate,
+      } = item;
 
-            // First check if record exists
-            tx.executeSql(
-              `SELECT * FROM customer WHERE id = ?`,
-              [id],
-              (_, result) => {
-                if (result.rows.length === 0) {
-                  // If the record doesn't exist, insert it
-                  tx.executeSql(
-                    `INSERT INTO customer 
-                    (id, name, phoneNumber, qad, barDaman, baghal, shana, astin, tunban, pacha, yakhan, yakhanValue, farmaish, daman, caff, caffValue, jeeb, tunbanStyle, jeebTunban, regestrationDate) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [
-                      id,
-                      name || "",
-                      phoneNumber || "",
-                      qad || "",
-                      barDaman || "",
-                      baghal || "",
-                      shana || "",
-                      astin || "",
-                      tunban || "",
-                      pacha || "",
-                      yakhan || "",
-                      yakhanValue || "",
-                      farmaish || "",
-                      daman || "",
-                      caff || "",
-                      caffValue || "",
-                      jeeb || "",
-                      tunbanStyle || "",
-                      jeebTunban || "",
-                      regestrationDate || "",
-                    ],
-                    () => {
-                      insertedCount++;
-                    },
-                    (_, error) => {
-                      console.error("Error inserting customer:", error);
-                      errorCount++;
-                    }
-                  );
-                }
-              }
-            );
-          });
-        },
-        (error) => {
-          console.error("Transaction error:", error);
-          reject(error);
-        },
-        () => {
-          resolve({ inserted: insertedCount, errors: errorCount });
+      try {
+        // Check if the customer record already exists
+        const selectResult = await executeSql(
+          "SELECT * FROM customer WHERE id = ?",
+          [id]
+        );
+        if (selectResult.rows.length === 0) {
+          // Insert new record if it doesn’t exist
+          const insertSql = `INSERT INTO customer 
+            (id, name, phoneNumber, qad, barDaman, baghal, shana, astin, tunban, pacha, yakhan, yakhanValue, farmaish, daman, caff, caffValue, jeeb, tunbanStyle, jeebTunban, regestrationDate) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+          const params = [
+            id,
+            name || "",
+            phoneNumber || "",
+            qad || "",
+            barDaman || "",
+            baghal || "",
+            shana || "",
+            astin || "",
+            tunban || "",
+            pacha || "",
+            yakhan || "",
+            yakhanValue || "",
+            farmaish || "",
+            daman || "",
+            caff || "",
+            caffValue || "",
+            jeeb || "",
+            tunbanStyle || "",
+            jeebTunban || "",
+            regestrationDate || "",
+          ];
+          await executeSql(insertSql, params);
+          insertedCount++;
         }
-      );
-    });
+      } catch (error) {
+        console.error("Error processing customer:", error);
+        errorCount++;
+      }
+    }
+
+    return { inserted: insertedCount, errors: errorCount };
   }, []);
 
-  // Insert waskat data with proper error handling and transaction management
-  // Fixed the SQL query to match the number of columns and values
+  // Insert waskat data into the database
   const insertWaskatData = useCallback(async (jsonData) => {
-    return new Promise((resolve, reject) => {
-      let insertedCount = 0;
-      let errorCount = 0;
+    let insertedCount = 0;
+    let errorCount = 0;
 
-      db.transaction(
-        (tx) => {
-          jsonData.forEach((item) => {
-            const {
-              id,
-              name,
-              phoneNumber,
-              qad,
-              yakhan,
-              shana,
-              baghal,
-              kamar,
-              soreen,
-              astin,
-              farmaish,
-              regestrationDate,
-            } = item;
+    for (const item of jsonData) {
+      const {
+        id,
+        name,
+        phoneNumber,
+        qad,
+        yakhan,
+        shana,
+        baghal,
+        kamar,
+        soreen,
+        astin,
+        farmaish,
+        regestrationDate,
+      } = item;
 
-            // First check if record exists
-            tx.executeSql(
-              `SELECT * FROM waskat WHERE id = ?`,
-              [id],
-              (_, result) => {
-                if (result.rows.length === 0) {
-                  // FIXED: Removed the extra placeholder in VALUES clause
-                  tx.executeSql(
-                    `INSERT INTO waskat 
-                    (id, name, phoneNumber, qad, yakhan, shana, baghal, kamar, soreen, astin, farmaish, regestrationDate) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [
-                      id,
-                      name || "",
-                      phoneNumber || "",
-                      qad || "",
-                      yakhan || "",
-                      shana || "",
-                      baghal || "",
-                      kamar || "",
-                      soreen || "",
-                      astin || "",
-                      farmaish || "",
-                      regestrationDate || "",
-                    ],
-                    () => {
-                      insertedCount++;
-                    },
-                    (_, error) => {
-                      console.error("Error inserting waskat:", error);
-                      errorCount++;
-                    }
-                  );
-                }
-              }
-            );
-          });
-        },
-        (error) => {
-          console.error("Transaction error:", error);
-          reject(error);
-        },
-        () => {
-          resolve({ inserted: insertedCount, errors: errorCount });
+      try {
+        // Check if the waskat record already exists
+        const selectResult = await executeSql(
+          "SELECT * FROM waskat WHERE id = ?",
+          [id]
+        );
+        if (selectResult.rows.length === 0) {
+          // Insert new record if it doesn’t exist
+          const insertSql = `INSERT INTO waskat 
+            (id, name, phoneNumber, qad, yakhan, shana, baghal, kamar, soreen, astin, farmaish, regestrationDate) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+          const params = [
+            id,
+            name || "",
+            phoneNumber || "",
+            qad || "",
+            yakhan || "",
+            shana || "",
+            baghal || "",
+            kamar || "",
+            soreen || "",
+            astin || "",
+            farmaish || "",
+            regestrationDate || "",
+          ];
+          await executeSql(insertSql, params);
+          insertedCount++;
         }
-      );
-    });
+      } catch (error) {
+        console.error("Error processing waskat:", error);
+        errorCount++;
+      }
+    }
+
+    return { inserted: insertedCount, errors: errorCount };
   }, []);
 
+  // Handle file picking for the backup file
   const pickFile = async () => {
     try {
       setErrorMessage("");
@@ -242,36 +204,25 @@ export default function Restore() {
 
       const { uri, name, size } = result.assets[0];
 
-      // Show file info to user
+      // Store selected file details
       setSelectedFile({
         uri,
         name,
-        size: Math.round(size / 1024), // Size in KB
+        size: Math.round(size / 1024), // Convert to KB
       });
 
-      // Read file content
+      // Read and validate file content
       const jsonData = await FileSystem.readAsStringAsync(uri);
-
       if (jsonData) {
-        // Validate JSON format
-        try {
-          const parsedData = JSON.parse(jsonData);
-          if (!validateBackupData(parsedData)) {
-            setErrorMessage(
-              "Invalid backup file format. Please select a valid backup file."
-            );
-            setSelectedFile(null);
-            return;
-          }
-
-          // Show confirmation dialog
-          setConfirmDialogVisible(true);
-        } catch (error) {
+        const parsedData = JSON.parse(jsonData);
+        if (!validateBackupData(parsedData)) {
           setErrorMessage(
-            "Could not parse backup file. The file may be corrupted."
+            "Invalid backup file format. Please select a valid backup file."
           );
           setSelectedFile(null);
+          return;
         }
+        setConfirmDialogVisible(true); // Show confirmation dialog
       }
     } catch (error) {
       console.error("Error picking or reading file:", error);
@@ -280,21 +231,20 @@ export default function Restore() {
     }
   };
 
+  // Handle the restore process
   const handleRestore = async () => {
     try {
       setConfirmDialogVisible(false);
       setLoading(true);
       setProgress(0.1);
 
-      // Read file again to ensure we have the latest data
+      // Read and parse the file content
       const jsonData = await FileSystem.readAsStringAsync(selectedFile.uri);
       const parsedData = JSON.parse(jsonData);
 
-      console.log("Parsed data:", parsedData); // For debugging
-
       setProgress(0.3);
 
-      // Process customer data
+      // Restore customer data
       let customerStats = { inserted: 0, errors: 0 };
       if (parsedData.customers && parsedData.customers.length > 0) {
         customerStats = await insertCustomerData(parsedData.customers);
@@ -302,7 +252,7 @@ export default function Restore() {
 
       setProgress(0.6);
 
-      // Process waskat data
+      // Restore waskat data
       let waskatStats = { inserted: 0, errors: 0 };
       if (parsedData.waskat && parsedData.waskat.length > 0) {
         waskatStats = await insertWaskatData(parsedData.waskat);
@@ -310,7 +260,7 @@ export default function Restore() {
 
       setProgress(0.9);
 
-      // Update stats for user feedback
+      // Update stats for feedback
       setRestoreStats({
         customers: customerStats.inserted,
         waskat: waskatStats.inserted,
@@ -318,13 +268,13 @@ export default function Restore() {
 
       setProgress(1);
 
-      // Show success message
+      // Notify user of success
       showToast(
         `Restore completed: ${customerStats.inserted} customers, ${waskatStats.inserted} waskat records`
       );
       triggerHapticFeedback("success");
 
-      // Reset after successful restore
+      // Reset state after completion
       setTimeout(() => {
         setLoading(false);
         setProgress(0);
@@ -338,11 +288,13 @@ export default function Restore() {
     }
   };
 
+  // Cancel the restore process
   const cancelRestore = () => {
     setConfirmDialogVisible(false);
     setSelectedFile(null);
   };
 
+  // Render the UI
   return (
     <View style={styles.container}>
       <Button
@@ -402,6 +354,7 @@ export default function Restore() {
   );
 }
 
+// Styles for the component
 const styles = StyleSheet.create({
   container: {
     borderRadius: 8,
@@ -411,7 +364,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 16,
   },
-
   fileInfo: {
     fontSize: 14,
     color: "#666",

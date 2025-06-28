@@ -12,63 +12,55 @@ import { Searchbar, Card, IconButton } from "react-native-paper";
 import CustomerDetailsModal from "../CustomerDetailsModal/CustomerDetailsModal";
 import SelectDropdown from "react-native-select-dropdown";
 import WaskatDetailsComponent from "../WaskatDetailsComponent/WaskatDetailsComponent";
-import useStore from "../../store";
 import { FlashList } from "@shopify/flash-list";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { executeSql } from "../../Database";
 
 const Home = () => {
-  const {
-    searchQuery,
-    data,
-    selectedOption,
-    totalRecords,
-    setSearchQuery,
-    setSelectedOption,
-    fetchData,
-    fetchTotalRecords,
-    resetStore,
-  } = useStore();
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [data, setData] = useState([]);
+  const [selectedOption, setSelectedOption] = useState("customer");
+  const [totalRecords, setTotalRecords] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+
   const flatListRef = useRef(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const scrollTopOpacity = useRef(new Animated.Value(0)).current;
   const SCROLL_THRESHOLD = 500;
 
-  // Load initial data
+  const fetchData = async (table, query) => {
+    try {
+      const sqlQuery = `SELECT * FROM ${table} WHERE name LIKE ? OR phoneNumber LIKE ?`;
+      const queryParams = [`%${query}%`, `%${query}%`];
+      const result = await executeSql(sqlQuery, queryParams);
+      setData(result.rows._array);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      ToastAndroid.show("Failed to fetch data", ToastAndroid.SHORT);
+    }
+  };
+
+  const fetchTotalRecords = async (table) => {
+    try {
+      const sqlQuery = `SELECT COUNT(id) AS total FROM ${table}`;
+      const result = await executeSql(sqlQuery);
+      setTotalRecords(result.rows.item(0).total);
+    } catch (error) {
+      console.error("Error fetching total records:", error);
+      ToastAndroid.show("Failed to fetch total records", ToastAndroid.SHORT);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
-      try {
-        await Promise.all([
-          fetchData(selectedOption, searchQuery),
-          fetchTotalRecords(selectedOption),
-        ]);
-      } catch (error) {
-        console.error("Error loading data:", error);
-        ToastAndroid.show("Failed to load data", ToastAndroid.SHORT);
-      }
+      await Promise.all([
+        fetchData(selectedOption, searchQuery),
+        fetchTotalRecords(selectedOption),
+      ]);
     };
-
-    loadData();
-  }, []);
-
-  // Handle search and option changes
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        await Promise.all([
-          fetchData(selectedOption, searchQuery),
-          fetchTotalRecords(selectedOption),
-        ]);
-      } catch (error) {
-        console.error("Error loading data:", error);
-        ToastAndroid.show("Failed to load data", ToastAndroid.SHORT);
-      }
-    };
-
     loadData();
   }, [searchQuery, selectedOption]);
 
@@ -88,7 +80,7 @@ const Home = () => {
   }, [selectedOption, searchQuery]);
 
   const handleOptionChange = (option) => {
-    const englishTableName = optionMapping[option];
+    const englishTableName = option === "کالا" ? "customer" : "waskat";
     setSelectedOption(englishTableName);
   };
 
@@ -128,17 +120,14 @@ const Home = () => {
     setModalVisible(true);
   };
 
-  const optionMapping = {
-    کالا: "customer",
-    واسکت: "waskat",
-  };
-
-  // Reset store when component unmounts
-  useEffect(() => {
-    return () => {
-      resetStore();
-    };
-  }, []);
+  const renderListHeader = useCallback(
+    () => (
+      <View style={styles.totalRecords}>
+        <Text>Total Number of records {totalRecords}</Text>
+      </View>
+    ),
+    [totalRecords]
+  );
 
   const ListItem = React.memo(({ item, onPressDetails }) => {
     return (
@@ -177,15 +166,6 @@ const Home = () => {
     []
   );
 
-  const renderListHeader = useCallback(
-    () => (
-      <View style={styles.totalRecords}>
-        <Text>Total Number of records {totalRecords}</Text>
-      </View>
-    ),
-    [totalRecords]
-  );
-
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
@@ -198,9 +178,7 @@ const Home = () => {
         />
         <SelectDropdown
           data={["کالا", "واسکت"]}
-          onSelect={(selectedItem) =>
-            handleOptionChange(selectedItem.toLowerCase())
-          }
+          onSelect={(selectedItem) => handleOptionChange(selectedItem)}
           defaultButtonText={"کالا"}
           buttonTextAfterSelection={(selectedItem) => selectedItem}
           rowTextForSelection={(item) => item}
@@ -320,10 +298,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-  },
-  leftIcons: {
-    flexDirection: "column",
-    paddingLeft: 8,
   },
   cardContent: {
     flex: 1,

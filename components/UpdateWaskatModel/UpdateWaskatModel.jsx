@@ -10,7 +10,7 @@ import {
 import { Button, TextInput } from "react-native-paper";
 import SelectDropdown from "react-native-select-dropdown";
 import { Formik } from "formik";
-import db from "../../Database";
+import { executeSql } from "../../Database";
 
 const DynamicSelectField = ({
   name,
@@ -119,7 +119,7 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
 
   const selectYakhan = ["وی v", "ګول", "یخندار"];
 
-  const updateCustomerWaskat = (values) => {
+  const updateCustomerWaskat = async (values) => {
     const currentDate = getCurrentDate();
     const {
       name,
@@ -135,60 +135,49 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
       farmaish,
     } = values;
 
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          `
-          UPDATE waskat
-          SET 
-            name = ?,
-            phoneNumber = ?,
-            qad = ?,
-            yakhan = ?,
-            yakhanValue = ?,
-            shana = ?,
-            baghal = ?,
-            kamar = ?,
-            soreen = ?,
-            astin = ?,
-            farmaish = ?,
-            regestrationDate = ?
-          WHERE id = ?
-          `,
-          [
-            name,
-            phoneNumber,
-            qad,
-            yakhan,
-            yakhanValue,
-            shana,
-            baghal,
-            kamar,
-            soreen,
-            astin,
-            farmaish,
-            currentDate,
-            customerId,
-          ],
-          (_, result) => {
-            console.log("Customer updated successfully:");
-            ToastAndroid.show(
-              "مشتری موفقانه به روز رسانی شد!",
-              ToastAndroid.SHORT
-            );
-            onClose();
-          },
-          (_, error) => {
-            console.log("Error updating customer:", error);
-            // Handle error here
-          }
-        );
-      },
-      (error) => {
-        console.log("Transaction error:", error);
-        // Handle transaction error here
-      }
-    );
+    try {
+      await executeSql(
+        `
+        UPDATE waskat
+        SET 
+          name = ?,
+          phoneNumber = ?,
+          qad = ?,
+          yakhan = ?,
+          yakhanValue = ?,
+          shana = ?,
+          baghal = ?,
+          kamar = ?,
+          soreen = ?,
+          astin = ?,
+          farmaish = ?,
+          regestrationDate = ?
+        WHERE id = ?
+        `,
+        [
+          name,
+          phoneNumber,
+          qad,
+          yakhan,
+          yakhanValue,
+          shana,
+          baghal,
+          kamar,
+          soreen,
+          astin,
+          farmaish,
+          currentDate,
+          customerId,
+        ]
+      );
+
+      console.log("Customer updated successfully:");
+      ToastAndroid.show("مشتری موفقانه به روز رسانی شد!", ToastAndroid.SHORT);
+      onClose();
+    } catch (error) {
+      console.log("Error updating customer:", error);
+      // Handle error here
+    }
   };
 
   return (
