@@ -14,7 +14,7 @@ import SelectDropdown from "react-native-select-dropdown";
 import WaskatDetailsComponent from "../WaskatDetailsComponent/WaskatDetailsComponent";
 import { FlashList } from "@shopify/flash-list";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { executeSql } from "../../Database";
+import { fetchCustomers } from "../../Database";
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,23 +31,30 @@ const Home = () => {
   const scrollTopOpacity = useRef(new Animated.Value(0)).current;
   const SCROLL_THRESHOLD = 500;
 
-  const fetchData = async (table, query) => {
+  const fetchData = async (table) => {
     try {
-      const sqlQuery = `SELECT * FROM ${table} WHERE name LIKE ? OR phoneNumber LIKE ?`;
-      const queryParams = [`%${query}%`, `%${query}%`];
-      const result = await executeSql(sqlQuery, queryParams);
-      setData(result.rows._array);
+      const result = await fetchCustomers(table);
+      setData(result);
     } catch (error) {
       console.error("Error fetching data:", error);
       ToastAndroid.show("Failed to fetch data", ToastAndroid.SHORT);
     }
   };
 
+  const searchInDatabase = async (table, query) => {
+    try {
+      const result = await fetchCustomers(table, query);
+      setData(result);
+    } catch (error) {
+      console.error("Error searching data:", error);
+      ToastAndroid.show("Failed to search data", ToastAndroid.SHORT);
+    }
+  };
+
   const fetchTotalRecords = async (table) => {
     try {
-      const sqlQuery = `SELECT COUNT(id) AS total FROM ${table}`;
-      const result = await executeSql(sqlQuery);
-      setTotalRecords(result.rows.item(0).total);
+      const result = await fetchCustomers(table, null, true);
+      setTotalRecords(result.total);
     } catch (error) {
       console.error("Error fetching total records:", error);
       ToastAndroid.show("Failed to fetch total records", ToastAndroid.SHORT);
@@ -57,7 +64,7 @@ const Home = () => {
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
-        fetchData(selectedOption, searchQuery),
+        searchInDatabase(selectedOption, searchQuery),
         fetchTotalRecords(selectedOption),
       ]);
     };
@@ -68,7 +75,7 @@ const Home = () => {
     setRefreshing(true);
     try {
       await Promise.all([
-        fetchData(selectedOption, searchQuery),
+        searchInDatabase(selectedOption, searchQuery),
         fetchTotalRecords(selectedOption),
       ]);
     } catch (error) {

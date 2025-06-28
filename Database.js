@@ -1,16 +1,19 @@
-import * as SQLite from "expo-sqlite/legacy";
+import * as SQLite from "expo-sqlite";
 
 const databaseName = "adilFashionData";
 
-const db = SQLite.openDatabase(databaseName);
+// Initialize the database and create tables if they don’t exist
+const initializeDatabase = async () => {
+  try {
+    const db = await SQLite.openDatabaseAsync(databaseName);
+    console.log("Database initialized:", db);
 
-export const initializeDatabase = async () => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      `CREATE TABLE IF NOT EXISTS customer (
+    // Create tables in a single execAsync call for efficiency
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS customer (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
-        phoneNumber INTEGER,
+        phoneNumber TEXT,
         qad REAL,
         barDaman REAL,
         baghal REAL,
@@ -28,83 +31,119 @@ export const initializeDatabase = async () => {
         jeeb TEXT,
         tunbanStyle TEXT,
         jeebTunban INTEGER,
-        regestrationDate DATE
-      );`
-    );
-    console.log("customer table created");
-    tx.executeSql(`CREATE INDEX IF NOT EXISTS idx_name ON customer (name);`);
-    tx.executeSql(
-      `CREATE INDEX IF NOT EXISTS idx_phoneNumber ON customer (phoneNumber);`
-    );
-  });
-};
-
-db.transaction((tx) => {
-  tx.executeSql(
-    `CREATE TABLE IF NOT EXISTS waskat (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      phoneNumber INTEGER,
-      qad REAL,
-      yakhan TEXT,
-      shana REAL,
-      baghal REAL,
-      kamar REAL,
-      soreen REAL,
-      astin REAL,
-      yakhanValue REAL,
-      farmaish TEXT,
-      regestrationDate DATE
-    );`
-  );
-  console.log("Waskat table created");
-});
-
-db.transaction((tx) => {
-  tx.executeSql(
-    `CREATE TABLE IF NOT EXISTS admin (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      password TEXT
-    );`
-  );
-  console.log("admin table created");
-
-  tx.executeSql(
-    `SELECT * FROM admin;`,
-    [],
-    (_, results) => {
-      if (results.rows.length === 0) {
-        // If no admin found, insert default password
-        tx.executeSql(
-          `INSERT INTO admin (password) VALUES (?);`,
-          ["esmat"], // Replace "default_password" with your desired default password
-          () => console.log("Default password inserted"),
-          (_, error) =>
-            console.error("Error inserting default password:", error)
-        );
-      }
-    },
-    (_, error) => console.error("Error checking admin table:", error)
-  );
-});
-
-export const executeSql = async (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        sql,
-        params,
-        (_, results) => resolve(results),
-        (_, error) => reject(error)
+        registrationDate DATE DEFAULT CURRENT_DATE
       );
-    });
-  });
+
+      CREATE TABLE IF NOT EXISTS waskat (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        phoneNumber TEXT,
+        qad REAL,
+        yakhan TEXT,
+        shana REAL,
+        baghal REAL,
+        kamar REAL,
+        soreen REAL,
+        astin REAL,
+        yakhanValue REAL,
+        farmaish TEXT,
+        registrationDate DATE DEFAULT CURRENT_DATE
+      );
+
+      CREATE TABLE IF NOT EXISTS admin (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        password TEXT
+      );
+    `);
+
+    // Check and insert default admin password
+    const adminRows = await db.getAllAsync("SELECT * FROM admin");
+    if (adminRows.length === 0) {
+      await db.runAsync("INSERT INTO admin (password) VALUES (?);", ["esmat"]);
+
+      console.log("Default password inserted");
+    }
+  } catch (error) {
+    console.error("Error initializing database:", error);
+  }
 };
 
-export const deleteCustomer = ({ id, table }) => {
-  db.transaction((tx) => {
-    tx.executeSql(`DELETE FROM ${table} WHERE id = ?`, [id]);
-  });
+// Execute any SQL query with parameters
+export const executeSql = async (sql, params = []) => {
+  try {
+    const db = await SQLite.openDatabaseAsync(databaseName);
+    const result = await db.execAsync(sql, params);
+
+    return result; // Returns rows as an array
+  } catch (error) {
+    console.error("Error executing SQL:", error);
+    throw error;
+  }
 };
 
-export default db;
+// Delete a customer or waskat by id and table name
+export const deleteCustomer = async ({ id, table }) => {
+  try {
+    const db = await SQLite.openDatabaseAsync(databaseName);
+    await db.runAsync(`DELETE FROM ${table} WHERE id = ?;`, [id]);
+  } catch (error) {
+    console.error("Error deleting record:", error);
+    throw error;
+  }
+};
+
+export const login = async () => {
+  try {
+    const db = await SQLite.openDatabaseAsync(databaseName);
+    const result = await db.getFirstAsync(`SELECT * FROM admin`);
+    return result;
+  } catch (error) {
+    console.error("Error  Login:", error);
+    throw error;
+  }
+};
+
+export const fetchCustomers = async (
+  table,
+  query = null,
+  countOnly = false
+) => {
+  try {
+    const db = await SQLite.openDatabaseAsync(databaseName);
+
+    if (countOnly) {
+      const result = await db.getAllAsync(
+        `SELECT COUNT(*) as total FROM ${table}`
+      );
+      return result[0];
+    }
+
+    if (query) {
+      const result = await db.getAllAsync(
+        `SELECT * FROM ${table} WHERE name LIKE ? OR phoneNumber LIKE ?`,
+        [`%${query}%`, `%${query}%`]
+      );
+      return result;
+    }
+
+    const customer = await db.getAllAsync(`SELECT * FROM ${table}`);
+    return customer;
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+    throw error;
+  }
+};
+
+export const addCustomer = async (sql, params = []) => {
+  try {
+    const db = await SQLite.openDatabaseAsync(databaseName);
+    const result = await db.execAsync(sql, params);
+
+    return result;
+  } catch (error) {
+    console.error("Error executing SQL:", error);
+    throw error;
+  }
+};
+
+export default initializeDatabase;

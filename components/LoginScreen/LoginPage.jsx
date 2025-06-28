@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 import { Formik } from "formik";
 import { StatusBar } from "expo-status-bar";
 import * as yup from "yup";
-import { executeSql } from "../../Database";
+import { executeSql, login } from "../../Database";
 import { TextInput } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -31,13 +31,13 @@ const LoginPage = ({ onLogin }) => {
       setLoading(true);
       const inputPassword = values.password;
 
-      const admin = await executeSql("SELECT * FROM admin WHERE id = 1;");
-      if (!admin || !admin.rows.length) {
+      const admin = await login();
+      if (!admin) {
         setIsPasswordIncorrect(true);
         return;
       }
 
-      const storedPassword = admin.rows.item(0).password;
+      const storedPassword = admin.password;
 
       if (inputPassword === storedPassword) {
         await AsyncStorage.setItem("isLoggedIn", "true");

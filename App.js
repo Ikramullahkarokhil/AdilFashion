@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
-import { initializeDatabase } from "./Database";
+import initializeDatabase from "./Database";
 import LoginPage from "./components/LoginScreen/LoginPage";
 import { Ionicons } from "@expo/vector-icons";
 import Home from "./components/Home/Home";

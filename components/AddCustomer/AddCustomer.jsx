@@ -10,7 +10,7 @@ import {
 import { TextInput, Checkbox } from "react-native-paper";
 import SelectDropdown from "react-native-select-dropdown";
 import { Formik } from "formik";
-import { executeSql } from "../../Database";
+import { addCustomer } from "../../Database";
 import * as Yup from "yup";
 
 const validationSchema = Yup.object().shape({
@@ -143,8 +143,8 @@ const AddCustomer = () => {
     const currentDate = getCurrentDate();
 
     try {
-      const resultSet = await executeSql(
-        "INSERT INTO customer (name, phoneNumber, qad, barDaman, baghal, shana, astin, tunban, pacha, yakhan, yakhanValue, yakhanBin, farmaish, daman, caff, caffValue, jeeb, tunbanStyle, jeebTunban, regestrationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      const resultSet = await addCustomer(
+        "INSERT INTO customer (name, phoneNumber, qad, barDaman, baghal, shana, astin, tunban, pacha, yakhan, yakhanValue, yakhanBin, farmaish, daman, caff, caffValue, jeeb, tunbanStyle, jeebTunban, registrationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [
           values.name,
           values.phoneNumber,
