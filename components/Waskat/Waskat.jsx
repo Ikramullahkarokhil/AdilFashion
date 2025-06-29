@@ -8,10 +8,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { TextInput } from "react-native-paper";
-
 import SelectDropdown from "react-native-select-dropdown";
 import { Formik } from "formik";
-import { executeSql } from "../../Database";
+import { addWaskat } from "../../Database";
 import * as Yup from "yup";
 
 const validationSchema = Yup.object().shape({
@@ -114,8 +113,8 @@ const Waskat = () => {
     const currentDate = getCurrentDate();
 
     try {
-      await executeSql(
-        "INSERT INTO waskat (name, phoneNumber, qad, yakhan, yakhanValue, shana, baghal, kamar, soreen, astin, farmaish, regestrationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+      const resultSet = await addWaskat(
+        "INSERT INTO waskat (name, phoneNumber, qad, yakhan, yakhanValue, shana, baghal, kamar, soreen, astin, farmaish, registrationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
         [
           values.name,
           values.phoneNumber,
@@ -137,6 +136,7 @@ const Waskat = () => {
       setResetFields(!resetFields);
     } catch (error) {
       console.error("Error inserting customer:", error);
+      ToastAndroid.show("خطا در ذخیره سازی معلومات!", ToastAndroid.SHORT);
     }
   };
 

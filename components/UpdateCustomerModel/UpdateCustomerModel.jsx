@@ -9,7 +9,7 @@ import {
 import { Button, Checkbox, TextInput } from "react-native-paper";
 import SelectDropdown from "react-native-select-dropdown";
 import { Formik } from "formik";
-import { executeSql } from "../../Database";
+import { updateCustomer } from "../../Database";
 
 const DynamicSelectField = ({
   name,
@@ -89,7 +89,6 @@ const DynamicInputField = ({
 const UpdateCustomerModel = ({ customerData, onClose, visible }) => {
   const [jeebTunban, setJeebTunban] = useState(false);
   const [yakhanBin, setYakhanBin] = useState(false);
-  const customerId = customerData.id;
 
   useEffect(() => {
     if (customerData) {
@@ -163,89 +162,21 @@ const UpdateCustomerModel = ({ customerData, onClose, visible }) => {
   const selectTunbanStyle = ["تنبان آزاد", "تنبان متوسط", "تنبان بلوچی"];
 
   const saveCustomer = async (values, resetForm) => {
-    const newJeebTunban = jeebTunban ? 1 : 0;
-    const newYakhanBin = yakhanBin ? 1 : 0;
-    const currentDate = getCurrentDate();
-
-    const {
-      name,
-      phoneNumber,
-      qad,
-      barDaman,
-      baghal,
-      shana,
-      astin,
-      tunban,
-      pacha,
-      yakhan,
-      yakhanValue,
-      farmaish,
-      daman,
-      caff,
-      caffValue,
-      jeeb,
-      tunbanStyle,
-    } = values;
-
     try {
-      await executeSql(
-        `
-        UPDATE customer
-        SET 
-          name = ?,
-          phoneNumber = ?,
-          qad = ?,
-          barDaman = ?,
-          baghal = ?,
-          shana = ?,
-          astin = ?,
-          tunban = ?,
-          pacha = ?,
-          yakhan = ?,
-          yakhanValue = ?,
-          yakhanBin = ?,
-          farmaish = ?,
-          daman = ?,
-          caff = ?,
-          caffValue = ?,
-          jeeb = ?,
-          tunbanStyle = ?,
-          jeebTunban = ?,
-          regestrationDate = ?
-        WHERE id = ?
-        `,
-        [
-          name,
-          phoneNumber,
-          qad,
-          barDaman,
-          baghal,
-          shana,
-          astin,
-          tunban,
-          pacha,
-          yakhan,
-          yakhanValue,
-          newYakhanBin,
-          farmaish,
-          daman,
-          caff,
-          caffValue,
-          jeeb,
-          tunbanStyle,
-          newJeebTunban,
-          currentDate,
-          customerId,
-        ]
-      );
+      const updatedValues = {
+        ...values,
+        jeebTunban: jeebTunban ? 1 : 0,
+        yakhanBin: yakhanBin ? 1 : 0,
+        registrationDate: getCurrentDate(),
+      };
 
-      console.log("Customer updated successfully:");
+      await updateCustomer(customerData.id, updatedValues);
+
       ToastAndroid.show("مشتری موفقانه به روز رسانی شد!", ToastAndroid.SHORT);
-      resetForm();
       onClose();
     } catch (error) {
-      console.log("Error updating customer:", error);
-      // Handle error here
+      console.error("Error updating customer:", error);
+      ToastAndroid.show("خطا در به روز رسانی معلومات!", ToastAndroid.SHORT);
     }
   };
 

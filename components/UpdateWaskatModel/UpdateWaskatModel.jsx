@@ -10,7 +10,7 @@ import {
 import { Button, TextInput } from "react-native-paper";
 import SelectDropdown from "react-native-select-dropdown";
 import { Formik } from "formik";
-import { executeSql } from "../../Database";
+import { updateWaskat } from "../../Database";
 
 const DynamicSelectField = ({
   name,
@@ -88,8 +88,6 @@ const DynamicInputField = ({
 };
 
 const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
-  const customerId = customerData.id;
-
   const initialValues = {
     name: customerData?.name || "",
     phoneNumber: customerData?.phoneNumber?.toString() || "",
@@ -120,63 +118,19 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
   const selectYakhan = ["وی v", "ګول", "یخندار"];
 
   const updateCustomerWaskat = async (values) => {
-    const currentDate = getCurrentDate();
-    const {
-      name,
-      phoneNumber,
-      qad,
-      yakhan,
-      yakhanValue,
-      shana,
-      baghal,
-      kamar,
-      soreen,
-      astin,
-      farmaish,
-    } = values;
-
     try {
-      await executeSql(
-        `
-        UPDATE waskat
-        SET 
-          name = ?,
-          phoneNumber = ?,
-          qad = ?,
-          yakhan = ?,
-          yakhanValue = ?,
-          shana = ?,
-          baghal = ?,
-          kamar = ?,
-          soreen = ?,
-          astin = ?,
-          farmaish = ?,
-          regestrationDate = ?
-        WHERE id = ?
-        `,
-        [
-          name,
-          phoneNumber,
-          qad,
-          yakhan,
-          yakhanValue,
-          shana,
-          baghal,
-          kamar,
-          soreen,
-          astin,
-          farmaish,
-          currentDate,
-          customerId,
-        ]
-      );
+      const updatedValues = {
+        ...values,
+        registrationDate: getCurrentDate(),
+      };
 
-      console.log("Customer updated successfully:");
+      await updateWaskat(customerData.id, updatedValues);
+
       ToastAndroid.show("مشتری موفقانه به روز رسانی شد!", ToastAndroid.SHORT);
       onClose();
     } catch (error) {
-      console.log("Error updating customer:", error);
-      // Handle error here
+      console.error("Error updating waskat:", error);
+      ToastAndroid.show("خطا در به روز رسانی معلومات!", ToastAndroid.SHORT);
     }
   };
 

@@ -27,7 +27,7 @@ const WaskatDetailsComponent = ({ visible, customer, onClose }) => {
 
   useEffect(() => {
     if (customer) {
-      const registrationDate = new Date(customer.regestrationDate);
+      const registrationDate = new Date(customer.registrationDate);
       const diffDays = Math.floor(
         (Date.now() - registrationDate) / (1000 * 60 * 60 * 24)
       );

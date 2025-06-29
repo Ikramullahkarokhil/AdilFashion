@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { Formik } from "formik";
-import { executeSql } from "../../Database";
+import { changePassword } from "../../Database";
 import * as Yup from "yup";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -84,32 +84,22 @@ const ResetPassword = ({ isVisible, onClose }) => {
     const { currentPassword, newPassword } = values;
 
     try {
-      const result = await executeSql(
-        "SELECT * FROM admin WHERE password = ?",
-        [currentPassword]
-      );
-
-      if (result.rows.length > 0) {
-        const updateResult = await executeSql(
-          "UPDATE admin SET password = ? WHERE password = ?",
-          [newPassword, currentPassword]
-        );
-
-        if (updateResult.rowsAffected > 0) {
-          ToastAndroid.show(
-            "Password changed successfully!",
-            ToastAndroid.SHORT
-          );
-          resetForm(); // Reset form values
-          onClose(); // Close the modal
-        } else {
-          console.log("Failed to update password");
-        }
-      } else {
-        setFieldError("currentPassword", "Incorrect password");
+      const result = await changePassword(currentPassword, newPassword);
+      if (result.success) {
+        ToastAndroid.show("Password changed successfully!", ToastAndroid.SHORT);
+        resetForm();
+        onClose();
       }
     } catch (error) {
-      console.log("Error during password reset:", error);
+      console.error("Error during password reset:", error);
+      if (error.message === "Current password is incorrect") {
+        setFieldError("currentPassword", "Incorrect password");
+      } else {
+        ToastAndroid.show(
+          "Failed to change password. Please try again.",
+          ToastAndroid.SHORT
+        );
+      }
     }
   };
 

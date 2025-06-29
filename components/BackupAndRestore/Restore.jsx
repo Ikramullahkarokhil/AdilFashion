@@ -11,7 +11,11 @@ import * as FileSystem from "expo-file-system";
 import * as DocumentPicker from "expo-document-picker";
 import { Button, ProgressBar, Portal, Dialog } from "react-native-paper";
 import * as Haptics from "expo-haptics";
-import { executeSql } from "../../Database"; // Importing the executeSql function
+import {
+  checkRecordExists,
+  restoreCustomer,
+  restoreWaskat,
+} from "../../Database";
 
 export default function Restore() {
   // State variables for managing UI and restore process
@@ -50,9 +54,34 @@ export default function Restore() {
 
   // Validate the structure of the backup data
   const validateBackupData = (data) => {
-    if (!data) return false;
-    if (!data.customers || !Array.isArray(data.customers)) return false;
-    if (!data.waskat || !Array.isArray(data.waskat)) return false;
+    console.log("Validating backup data:", JSON.stringify(data, null, 2));
+
+    if (!data) {
+      console.log("Validation failed: data is null or undefined");
+      return false;
+    }
+
+    // Check required arrays
+    if (!data.customers || !Array.isArray(data.customers)) {
+      console.log("Validation failed: customers is not an array");
+      return false;
+    }
+    if (!data.waskat || !Array.isArray(data.waskat)) {
+      console.log("Validation failed: waskat is not an array");
+      return false;
+    }
+
+    // Check metadata (optional fields)
+    if (data.backupDate && typeof data.backupDate !== "string") {
+      console.log("Validation failed: backupDate is not a string");
+      return false;
+    }
+    if (data.appVersion && typeof data.appVersion !== "string") {
+      console.log("Validation failed: appVersion is not a string");
+      return false;
+    }
+
+    console.log("Validation passed successfully");
     return true;
   };
 
@@ -62,64 +91,13 @@ export default function Restore() {
     let errorCount = 0;
 
     for (const item of jsonData) {
-      const {
-        id,
-        name,
-        phoneNumber,
-        qad,
-        barDaman,
-        baghal,
-        shana,
-        astin,
-        tunban,
-        pacha,
-        yakhan,
-        yakhanValue,
-        farmaish,
-        daman,
-        caff,
-        caffValue,
-        jeeb,
-        tunbanStyle,
-        jeebTunban,
-        regestrationDate,
-      } = item;
-
       try {
-        // Check if the customer record already exists
-        const selectResult = await executeSql(
-          "SELECT * FROM customer WHERE id = ?",
-          [id]
-        );
-        if (selectResult.rows.length === 0) {
-          // Insert new record if it doesn’t exist
-          const insertSql = `INSERT INTO customer 
-            (id, name, phoneNumber, qad, barDaman, baghal, shana, astin, tunban, pacha, yakhan, yakhanValue, farmaish, daman, caff, caffValue, jeeb, tunbanStyle, jeebTunban, regestrationDate) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-          const params = [
-            id,
-            name || "",
-            phoneNumber || "",
-            qad || "",
-            barDaman || "",
-            baghal || "",
-            shana || "",
-            astin || "",
-            tunban || "",
-            pacha || "",
-            yakhan || "",
-            yakhanValue || "",
-            farmaish || "",
-            daman || "",
-            caff || "",
-            caffValue || "",
-            jeeb || "",
-            tunbanStyle || "",
-            jeebTunban || "",
-            regestrationDate || "",
-          ];
-          await executeSql(insertSql, params);
-          insertedCount++;
+        const exists = await checkRecordExists("customer", item.id);
+        if (!exists) {
+          const success = await restoreCustomer(item);
+          if (success) {
+            insertedCount++;
+          }
         }
       } catch (error) {
         console.error("Error processing customer:", error);
@@ -136,48 +114,13 @@ export default function Restore() {
     let errorCount = 0;
 
     for (const item of jsonData) {
-      const {
-        id,
-        name,
-        phoneNumber,
-        qad,
-        yakhan,
-        shana,
-        baghal,
-        kamar,
-        soreen,
-        astin,
-        farmaish,
-        regestrationDate,
-      } = item;
-
       try {
-        // Check if the waskat record already exists
-        const selectResult = await executeSql(
-          "SELECT * FROM waskat WHERE id = ?",
-          [id]
-        );
-        if (selectResult.rows.length === 0) {
-          // Insert new record if it doesn’t exist
-          const insertSql = `INSERT INTO waskat 
-            (id, name, phoneNumber, qad, yakhan, shana, baghal, kamar, soreen, astin, farmaish, regestrationDate) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-          const params = [
-            id,
-            name || "",
-            phoneNumber || "",
-            qad || "",
-            yakhan || "",
-            shana || "",
-            baghal || "",
-            kamar || "",
-            soreen || "",
-            astin || "",
-            farmaish || "",
-            regestrationDate || "",
-          ];
-          await executeSql(insertSql, params);
-          insertedCount++;
+        const exists = await checkRecordExists("waskat", item.id);
+        if (!exists) {
+          const success = await restoreWaskat(item);
+          if (success) {
+            insertedCount++;
+          }
         }
       } catch (error) {
         console.error("Error processing waskat:", error);

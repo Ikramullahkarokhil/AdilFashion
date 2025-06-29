@@ -41,9 +41,16 @@ const Home = () => {
     }
   };
 
+  // useEffect(() => {
+  //   const results = fetchCustomers("customer", "Select * from customer");
+  //   // console.log(results);
+  //   // console.log(data);
+  // }, []);
+
   const searchInDatabase = async (table, query) => {
     try {
       const result = await fetchCustomers(table, query);
+
       setData(result);
     } catch (error) {
       console.error("Error searching data:", error);
@@ -70,6 +77,8 @@ const Home = () => {
     };
     loadData();
   }, [searchQuery, selectedOption]);
+
+  // console.log(data);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -158,7 +167,7 @@ const Home = () => {
                 </View>
               )}
               <View style={styles.contentRow}>
-                <Text style={styles.subContent}>{item.regestrationDate}</Text>
+                <Text style={styles.subContent}>{item.registrationDate}</Text>
                 <Ionicons name="calendar" size={16} color="#0083D0" />
               </View>
             </Card.Content>

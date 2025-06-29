@@ -12,16 +12,16 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import * as Haptics from "expo-haptics";
 import Restore from "./Restore";
-import { executeSql } from "../../Database";
+import { fetchCustomers } from "../../Database";
 
 // Utility functions moved outside component for better performance
 const exportDataToJson = async (tableName) => {
-  const query = `SELECT * FROM ${tableName}`;
   try {
-    const results = await executeSql(query);
-    return results.rows._array;
+    const result = await fetchCustomers(tableName);
+    return result || [];
   } catch (error) {
-    throw new Error(`Error exporting data from ${tableName}: ${error.message}`);
+    console.error(`Error exporting data from ${tableName}:`, error);
+    return [];
   }
 };
 
@@ -29,8 +29,9 @@ const saveJsonToFile = async (jsonData) => {
   try {
     const currentDate = new Date().toISOString().split("T")[0];
     const fileName = `backup_${currentDate}.json`;
-    const fileUri = FileSystem.documentDirectory + fileName;
-    await FileSystem.writeAsStringAsync(fileUri, jsonData);
+    const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+
+    await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(jsonData));
     return { fileUri, fileName };
   } catch (error) {
     throw new Error(`Error saving backup file: ${error.message}`);
@@ -93,26 +94,24 @@ const Backup = () => {
       const waskatData = await exportDataToJson("waskat");
       setProgress(0.7);
 
-      // Combine all data
+      // Ensure we have valid arrays
       const allData = {
-        customers: customerData,
-        waskat: waskatData,
-        // Add more tables as needed
+        customers: Array.isArray(customerData) ? customerData : [],
+        waskat: Array.isArray(waskatData) ? waskatData : [],
         backupDate: new Date().toISOString(),
-        appVersion: "1.0.0", // Add app version for compatibility checks
+        appVersion: "1.0.0",
       };
 
       setProgress(0.8);
 
       // Save to file
-      const jsonString = JSON.stringify(allData);
-      const { fileUri, fileName } = await saveJsonToFile(jsonString);
+      const { fileUri, fileName } = await saveJsonToFile(allData);
 
       // Get file size for user information
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
       setBackupDetails({
         fileName,
-        size: fileInfo.size ? Math.round(fileInfo.size / 1024) : 0, // Size in KB
+        size: fileInfo.size ? Math.round(fileInfo.size / 1024) : 0,
       });
 
       setProgress(0.9);

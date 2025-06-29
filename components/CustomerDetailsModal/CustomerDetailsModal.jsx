@@ -64,7 +64,7 @@ const CustomerDetailsModal = ({
 
     // Calculate time since registration using native JavaScript Date
     const currentDate = new Date();
-    const registrationDate = new Date(customer.regestrationDate); // Typo: should be 'registrationDate'
+    const registrationDate = new Date(customer.registrationDate); // Fixed from regestrationDate
     const diffInTime = currentDate - registrationDate;
     const diffInDays = Math.floor(diffInTime / (1000 * 60 * 60 * 24));
     const diffInMonths = Math.floor(diffInDays / 30); // Approximation
@@ -127,9 +127,7 @@ const CustomerDetailsModal = ({
                   onPress={onClose}
                   style={styles.closeButton}
                 />
-                <Text style={styles.modalTitle}>
-                  قد اندام : {customer.name}
-                </Text>
+                <Text style={styles.modalTitle}>{customer.name}</Text>
               </View>
 
               <ScrollView

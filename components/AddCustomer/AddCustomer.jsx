@@ -144,7 +144,7 @@ const AddCustomer = () => {
 
     try {
       const resultSet = await addCustomer(
-        "INSERT INTO customer (name, phoneNumber, qad, barDaman, baghal, shana, astin, tunban, pacha, yakhan, yakhanValue, yakhanBin, farmaish, daman, caff, caffValue, jeeb, tunbanStyle, jeebTunban, registrationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO customer (name, phoneNumber, qad, barDaman, baghal, shana, astin, tunban, pacha, yakhan, yakhanValue, yakhanBin, farmaish, daman, caff, caffValue, jeeb, tunbanStyle, jeebTunban, registrationDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           values.name,
           values.phoneNumber,
@@ -169,17 +169,16 @@ const AddCustomer = () => {
         ]
       );
 
-      if (resultSet.rowsAffected > 0) {
-        ToastAndroid.show("مشتری موفقانه اضافه شد!", ToastAndroid.SHORT);
-        resetForm();
-        setResetFields(!resetFields);
-        setJeebTunbanChecked(false);
-        setYakhanBinChecked(false);
-      } else {
-        console.log("Error saving customer.");
-      }
+      // The operation was successful if we get here
+      console.log("Customer added successfully with ID:", resultSet?.insertId);
+      ToastAndroid.show("مشتری موفقانه اضافه شد!", ToastAndroid.SHORT);
+      resetForm();
+      setResetFields(!resetFields);
+      setJeebTunbanChecked(false);
+      setYakhanBinChecked(false);
     } catch (error) {
       console.error("Error inserting customer:", error);
+      ToastAndroid.show("خطا در ذخیره سازی معلومات!", ToastAndroid.SHORT);
     }
   };
 
