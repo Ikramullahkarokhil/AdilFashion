@@ -54,7 +54,7 @@ export default function Restore() {
 
   // Validate the structure of the backup data
   const validateBackupData = (data) => {
-    console.log("Validating backup data:", JSON.stringify(data, null, 2));
+    // console.log("Validating backup data:", JSON.stringify(data, null, 2));
 
     if (!data) {
       console.log("Validation failed: data is null or undefined");
@@ -212,9 +212,7 @@ export default function Restore() {
       setProgress(1);
 
       // Notify user of success
-      showToast(
-        `Restore completed: ${customerStats.inserted} customers, ${waskatStats.inserted} waskat records`
-      );
+      showToast(`Restore completed successfully`);
       triggerHapticFeedback("success");
 
       // Reset state after completion
@@ -267,13 +265,6 @@ export default function Restore() {
             {progress < 1 ? "Restoring data..." : "Restore complete!"}
           </Text>
           <ProgressBar progress={progress} style={styles.progressBar} />
-
-          {progress === 1 && (
-            <Text style={styles.statsText}>
-              Restored {restoreStats.customers} customers and{" "}
-              {restoreStats.waskat} waskat records
-            </Text>
-          )}
         </View>
       )}
 

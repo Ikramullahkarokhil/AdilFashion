@@ -1,10 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React, { useEffect, useState } from "react";
-import {
-  Stack,
-  useGlobalSearchParams,
-  useLocalSearchParams,
-} from "expo-router";
+import { Stack, useGlobalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import initializeDatabase from "../database";
 import Login from "./screens/Login";
@@ -13,7 +9,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const _layout = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [index, setIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const { customerName } = useGlobalSearchParams();
@@ -55,7 +50,11 @@ const _layout = () => {
     <SafeAreaProvider>
       <PaperProvider>
         <Stack
-          screenOptions={{ headerTitleAlign: "center", statusBarStyle: "dark" }}
+          screenOptions={{
+            headerTitleAlign: "center",
+            statusBarStyle: "dark",
+            animation: "default",
+          }}
         >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="screens/Login" options={{ headerShown: false }} />

@@ -106,7 +106,7 @@ const initializeDatabase = async () => {
       const adminRows = await db.getAllAsync("SELECT * FROM admin");
       if (adminRows.length === 0) {
         await db.runAsync("INSERT INTO admin (password) VALUES (?);", [
-          "esmat",
+          "asmat",
         ]);
         console.log("Default admin password initialized");
       }
