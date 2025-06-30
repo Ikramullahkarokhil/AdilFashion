@@ -54,7 +54,9 @@ const _layout = () => {
   return (
     <SafeAreaProvider>
       <PaperProvider>
-        <Stack screenOptions={{ headerTitleAlign: "center" }}>
+        <Stack
+          screenOptions={{ headerTitleAlign: "center", statusBarStyle: "dark" }}
+        >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="screens/Login" options={{ headerShown: false }} />
           <Stack.Screen

@@ -401,6 +401,12 @@ export const restoreCustomer = async (customerData) => {
     const db = await getDatabase();
     return await withRetry(async () => {
       return await db.withTransactionAsync(async () => {
+        // Support both 'registrationDate' and legacy 'regestrationDate' from backup
+        let regDate =
+          customerData.registrationDate || customerData.regestrationDate;
+        if (!regDate || regDate === "") {
+          regDate = new Date().toISOString().split("T")[0];
+        }
         const result = await db.runAsync(
           `INSERT INTO customer (
             id, name, phoneNumber, qad, barDaman, baghal, shana, astin, 
@@ -427,8 +433,7 @@ export const restoreCustomer = async (customerData) => {
             customerData.jeeb || "",
             customerData.tunbanStyle || "",
             customerData.jeebTunban || "",
-            customerData.registrationDate ||
-              new Date().toISOString().split("T")[0],
+            regDate,
           ]
         );
         return result.changes > 0;
@@ -447,6 +452,12 @@ export const restoreWaskat = async (waskatData) => {
     const db = await getDatabase();
     return await withRetry(async () => {
       return await db.withTransactionAsync(async () => {
+        // Support both 'registrationDate' and legacy 'regestrationDate' from backup
+        let regDate =
+          waskatData.registrationDate || waskatData.regestrationDate;
+        if (!regDate || regDate === "") {
+          regDate = new Date().toISOString().split("T")[0];
+        }
         const result = await db.runAsync(
           `INSERT INTO waskat (
             id, name, phoneNumber, qad, yakhan, shana, baghal, kamar, 
@@ -464,8 +475,7 @@ export const restoreWaskat = async (waskatData) => {
             waskatData.soreen || "",
             waskatData.astin || "",
             waskatData.farmaish || "",
-            waskatData.registrationDate ||
-              new Date().toISOString().split("T")[0],
+            regDate,
           ]
         );
         return result.changes > 0;
