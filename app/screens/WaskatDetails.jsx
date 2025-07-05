@@ -83,29 +83,27 @@ const WaskatDetails = () => {
   const handleShare = async () => {
     setMenuModalVisible(false);
     try {
-      const customerInfo = `
-جزئیات مشتری:
-
-نام: ${customer.name}
-شماره تلفن: ${customer.phoneNumber}
-قد: ${customer.qad}
-بغل: ${customer.baghal}
-کمر: ${customer.kamar}
-شانه: ${customer.shana}
-استین: ${customer.soreen}
-نوع یخن: ${
+      // Enhanced share content with branding and better formatting
+      let shareTitle = `خیاطی عادل فیشن`;
+      let customerInfo = `${shareTitle}\n`;
+      customerInfo += `• نام مشتری: ${customer.name || "—"}\n`;
+      customerInfo += `• شماره تلفن: ${customer.phoneNumber || "—"}\n`;
+      customerInfo += `• قد: ${customer.qad || "—"}\n`;
+      customerInfo += `• بغل: ${customer.baghal || "—"}\n`;
+      customerInfo += `• کمر: ${customer.kamar || "—"}\n`;
+      customerInfo += `• شانه: ${customer.shana || "—"}\n`;
+      customerInfo += `• استین: ${customer.soreen || "—"}\n`;
+      customerInfo += `• نوع یخن: ${
         customer?.yakhan || customer?.yakhanValue
           ? `${customer?.yakhan ? `(${customer.yakhan})` : ""} ${
               customer?.yakhanValue ? `(${customer.yakhanValue})` : ""
             }`.trim()
           : "—"
-      }
-فرمایشات: ${customer.farmaish || "—"}
-تاریخ ثبت: ${customer.registrationDate || "—"}
-      `;
-
+      }\n`;
+      customerInfo += `• فرمایشات: ${customer.farmaish || "—"}\n`;
+      customerInfo += `• تاریخ ثبت: ${customer.registrationDate || "—"}\n`;
       await Share.share({
-        title: `جزئیات مشتری: ${customer.name}`,
+        title: `جزئیات واسکت: ${customer.name}`,
         message: customerInfo.trim(),
       });
     } catch (error) {
@@ -255,13 +253,13 @@ const WaskatDetails = () => {
               <Divider style={styles.menuDivider} />
               <TouchableOpacity style={styles.menuItem} onPress={handleShare}>
                 <IconButton
-                  icon="share"
+                  icon="share-variant"
                   size={24}
-                  iconColor="#4CAF50"
+                  iconColor="#2196F3"
                   style={styles.menuIcon}
                 />
-                <Text style={[styles.menuItemText, { color: "#4CAF50" }]}>
-                  Share
+                <Text style={[styles.menuItemText, { color: "#2196F3" }]}>
+                  Share Waskat
                 </Text>
               </TouchableOpacity>
             </View>

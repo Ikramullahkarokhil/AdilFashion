@@ -60,45 +60,54 @@ const CustomerDetailsModal = () => {
   const handleShare = async () => {
     setMenuModalVisible(false);
     try {
-      // Build a string with all customer fields, no icons
-      const customerInfo = `
-جزئیات کامل مشتری:
+      // Enhanced share content with branding and better formatting
+      let shareTitle = `خیاطی عادل فیشن`;
+      let customerInfo = `${shareTitle}
 
-نام: ${customer.name || "—"}
-شماره تلفن: ${customer.phoneNumber || "—"}
-قد: ${customer.qad || "—"}
-بر دامن: ${customer.barDaman || "—"}
-بغل: ${customer.baghal || "—"}
-شانه: ${customer.shana || "—"}
-آستین: ${customer.astin || "—"}
-تنبان: ${
+• نام: ${customer.name || "—"}
+• شماره تلفن: ${customer.phoneNumber || "—"}
+• قد: ${customer.qad || "—"}
+• بر دامن: ${customer.barDaman || "—"}
+• بغل: ${customer.baghal || "—"}
+• شانه: ${customer.shana || "—"}
+• آستین: ${customer.astin || "—"}
+• تنبان: ${
         customer.tunbanStyle
           ? customer.tunban
             ? `${customer.tunbanStyle} (${customer.tunban})`
             : customer.tunbanStyle
           : customer.tunban || "—"
       }
-پاچه: ${customer.pacha || "—"}
-یخن: ${
+• پاچه: ${customer.pacha || "—"}
+• یخن: ${
         customerDetails.yakhanBinValue && customer.yakhan
           ? `${customerDetails.yakhanBinValue} ${customer.yakhan}${
               customer.yakhanValue ? ` (${customer.yakhanValue})` : ""
             }`
           : customer.yakhan || "—"
       }
-دامن: ${customer.daman || "—"}
-نوع آستین: ${
+• دامن: ${customer.daman || "—"}
+• نوع آستین: ${
         customer.caff
           ? customer.caffValue
             ? `${customer.caff} (${customer.caffValue})`
             : customer.caff
           : customer.caffValue || "—"
       }
-جیب: ${customer.jeeb || "—"}
-جیب تنبان: ${customerDetails.jeebTunban ? "دارد" : "ندارد"}
-فرمایشات: ${customer.farmaish || "—"}
-تاریخ ثبت نام: ${customer.registrationDate || "—"}
+• جیب: ${customer.jeeb || "—"}
+• جیب تنبان: ${customerDetails.jeebTunban ? "دارد" : "ندارد"}
+• فرمایشات: ${customer.farmaish || "—"}
+• تاریخ ثبت نام: ${customer.registrationDate || "—"}
 `;
+      // If waskat details exist, add them to the share content with enhanced formatting
+      if (customer.waskat) {
+        customerInfo += `\n-----------------------------\n🦺 جزئیات واسکت:\n`;
+        customerInfo += `• رنگ واسکت: ${customer.waskat.color || "—"}\n`;
+        customerInfo += `• سایز واسکت: ${customer.waskat.size || "—"}\n`;
+        customerInfo += `• مدل واسکت: ${customer.waskat.model || "—"}\n`;
+        customerInfo += `• یادداشت واسکت: ${customer.waskat.note || "—"}\n`;
+        // Add share button for waskat details (UI/UX enhancement)
+      }
       await Share.share({
         title: `جزئیات مشتری: ${customer.name}`,
         message: customerInfo.trim(),
@@ -206,13 +215,38 @@ const CustomerDetailsModal = () => {
                 <Divider style={styles.divider} />
                 <DetailRow label="قد" value={customer.qad} />
                 <Divider style={styles.divider} />
-                <DetailRow label="بر دامن" value={customer.barDaman} />
+                <DetailRow
+                  label="دامن"
+                  value={
+                    customer.daman
+                      ? customer.barDaman
+                        ? `${customer.daman} (${customer.barDaman})`
+                        : customer.daman
+                      : customer.barDaman || ""
+                  }
+                />
+
                 <Divider style={styles.divider} />
                 <DetailRow label="بغل" value={customer.baghal} />
                 <Divider style={styles.divider} />
                 <DetailRow label="شانه" value={customer.shana} />
                 <Divider style={styles.divider} />
-                <DetailRow label="آستین" value={customer.astin} />
+                <DetailRow
+                  label="آستین"
+                  value={
+                    customer.astin
+                      ? customer.caff
+                        ? customer.caffValue
+                          ? `${customer.astin}  (${customer.caff} ,  ${customer.caffValue})`
+                          : `${customer.astin} (${customer.caff})`
+                        : customer.astin
+                      : customer.caff
+                      ? customer.caffValue
+                        ? `(${customer.caff}, ${customer.caffValue})`
+                        : `(${customer.caff})`
+                      : customer.caffValue || ""
+                  }
+                />
                 <Divider style={styles.divider} />
                 <DetailRow
                   label="تنبان"
@@ -231,7 +265,7 @@ const CustomerDetailsModal = () => {
                   label="یخن"
                   value={
                     customerDetails.yakhanBinValue && customer.yakhan
-                      ? `${customerDetails.yakhanBinValue} ${customer.yakhan}${
+                      ? `${customerDetails.yakhanBinValue}  ${customer.yakhan}${
                           customer.yakhanValue
                             ? ` (${customer.yakhanValue})`
                             : ""
@@ -240,32 +274,78 @@ const CustomerDetailsModal = () => {
                   }
                 />
                 <Divider style={styles.divider} />
-                <DetailRow label="دامن" value={customer.daman} />
-                <Divider style={styles.divider} />
+
                 <DetailRow
-                  label="نوع آستین"
+                  label="جیب"
                   value={
-                    customer.caff
-                      ? customer.caffValue
-                        ? `${customer.caff} (${customer.caffValue})`
-                        : customer.caff
-                      : customer.caffValue || ""
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        width: "100%",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: "#333",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {customer.jeeb || ""}
+                      </Text>
+                      {customerDetails.jeebTunban !== false &&
+                        customerDetails.jeebTunban !== 0 && (
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontSize: 15,
+                                color: "#555",
+                                fontWeight: "600",
+                              }}
+                            >
+                              {"  "}(
+                            </Text>
+                            <Checkbox
+                              status={
+                                customerDetails.jeebTunban
+                                  ? "checked"
+                                  : "unchecked"
+                              }
+                              color="#0083D0"
+                              style={{ marginRight: 2 }}
+                            />
+                            <Text
+                              style={{
+                                fontSize: 15,
+                                color: "#555",
+                                fontWeight: "600",
+                              }}
+                            >
+                              جیب تنبان
+                            </Text>
+
+                            <Text
+                              style={{
+                                fontSize: 15,
+                                color: "#555",
+                                fontWeight: "600",
+                              }}
+                            >
+                              {"  "})
+                            </Text>
+                          </View>
+                        )}
+                    </View>
                   }
                 />
-                <Divider style={styles.divider} />
-                <DetailRow label="جیب" value={customer.jeeb} />
-                <Divider style={styles.divider} />
-                <DetailRow
-                  label="جیب تنبان"
-                  value={
-                    <Checkbox
-                      status={
-                        customerDetails.jeebTunban ? "checked" : "unchecked"
-                      }
-                      color="#0083D0"
-                    />
-                  }
-                />
+
                 <Divider style={styles.divider} />
                 <DetailRow label="فرمایشات" value={customer.farmaish} />
                 <Divider style={styles.divider} />
@@ -355,9 +435,55 @@ const CustomerDetailsModal = () => {
                   style={styles.menuIcon}
                 />
                 <Text style={[styles.menuItemText, { color: "#4CAF50" }]}>
-                  Share
+                  Share Customer
                 </Text>
               </TouchableOpacity>
+              {/* Waskat share option */}
+              {customer.waskat && (
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={async () => {
+                    setMenuModalVisible(false);
+                    try {
+                      let shareTitle = `==============================\nخیاطی عادل فیشن\n==============================\n`;
+                      let waskatInfo = `${shareTitle}\n🦺 جزئیات واسکت:\n\n`;
+                      waskatInfo += `• نام مشتری: ${customer.name || "—"}\n`;
+                      waskatInfo += `• رنگ واسکت: ${
+                        customer.waskat.color || "—"
+                      }\n`;
+                      waskatInfo += `• سایز واسکت: ${
+                        customer.waskat.size || "—"
+                      }\n`;
+                      waskatInfo += `• مدل واسکت: ${
+                        customer.waskat.model || "—"
+                      }\n`;
+                      waskatInfo += `• یادداشت واسکت: ${
+                        customer.waskat.note || "—"
+                      }\n`;
+                      await Share.share({
+                        title: `جزئیات واسکت: ${customer.name}`,
+                        message: waskatInfo.trim(),
+                      });
+                    } catch (error) {
+                      console.error("Error sharing waskat:", error);
+                      ToastAndroid.show(
+                        "خطا در اشتراک‌گذاری واسکت",
+                        ToastAndroid.SHORT
+                      );
+                    }
+                  }}
+                >
+                  <IconButton
+                    icon="share-variant"
+                    size={24}
+                    iconColor="#2196F3"
+                    style={styles.menuIcon}
+                  />
+                  <Text style={[styles.menuItemText, { color: "#2196F3" }]}>
+                    Share Waskat
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </Animated.View>
         </TouchableOpacity>
