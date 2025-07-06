@@ -264,7 +264,7 @@ const CustomerDetailsModal = () => {
                 <DetailRow
                   label="یخن"
                   value={
-                    customerDetails.yakhanBinValue && customer.yakhan
+                    customer.yakhan
                       ? `${customerDetails.yakhanBinValue}  ${customer.yakhan}${
                           customer.yakhanValue
                             ? ` (${customer.yakhanValue})`
