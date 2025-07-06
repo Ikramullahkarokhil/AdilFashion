@@ -160,7 +160,18 @@ const WaskatDetails = () => {
               <Divider style={styles.divider} />
               <DetailRow label="کمر" value={customer.kamar} />
               <Divider style={styles.divider} />
-              <DetailRow label="شانه" value={customer.shana} />
+              <DetailRow
+                label="شانه"
+                value={
+                  customer?.shanaType || customer?.shana
+                    ? `${
+                        customer?.shanaType ? `( ${customer.shanaType} )` : ""
+                      } ${
+                        customer?.shana ? `( ${customer.shana} )` : ""
+                      }`.trim()
+                    : "—"
+                }
+              />
               <Divider style={styles.divider} />
               <DetailRow label="استین" value={customer.soreen} />
               <Divider style={styles.divider} />
@@ -168,8 +179,10 @@ const WaskatDetails = () => {
                 label="نوع یخن"
                 value={
                   customer?.yakhan || customer?.yakhanValue
-                    ? `${customer?.yakhan ? `(${customer.yakhan})` : ""} ${
-                        customer?.yakhanValue ? `(${customer.yakhanValue})` : ""
+                    ? `${customer?.yakhan ? `( ${customer.yakhan} )` : ""} ${
+                        customer?.yakhanValue
+                          ? `( ${customer.yakhanValue} )`
+                          : ""
                       }`.trim()
                     : "—"
                 }

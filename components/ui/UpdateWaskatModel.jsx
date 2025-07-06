@@ -88,6 +88,8 @@ const DynamicInputField = ({
   );
 };
 
+const shanaTypes = ["نیمه ډاون", "ډاون"];
+
 const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
   const initialValues = {
     name: customerData?.name || "",
@@ -96,6 +98,7 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
     yakhan: customerData?.yakhan || "",
     yakhanValue: customerData?.yakhanValue?.toString() || "",
     shana: customerData?.shana?.toString() || "",
+    shanaType: customerData?.shanaType?.toString() || "",
     baghal: customerData?.baghal?.toString() || "",
     kamar: customerData?.kamar?.toString() || "",
     soreen: customerData?.soreen?.toString() || "",
@@ -270,17 +273,31 @@ const UpdateWaskatModel = ({ visible, onClose, customerData }) => {
                 </View>
               </View>
 
-              <View style={styles.fieldContainer}>
-                <DynamicInputField
-                  label="فرمایشات"
-                  name="farmaish"
-                  handleChange={handleChange}
-                  handleBlur={handleBlur}
-                  value={values.farmaish}
-                  errors={errors}
-                  keyboard="default"
-                  multiline={true}
-                />
+              <View style={styles.fieldContainer2}>
+                <View style={styles.fieldContainer}>
+                  <DynamicSelectField
+                    label={values.shanaType}
+                    name="shanaType"
+                    handleChange={handleChange}
+                    handleBlur={handleBlur}
+                    value={values.shanaType}
+                    items={shanaTypes}
+                    errors={errors}
+                  />
+                </View>
+
+                <View style={styles.fieldContainer}>
+                  <DynamicInputField
+                    label="فرمایشات"
+                    name="farmaish"
+                    handleChange={handleChange}
+                    handleBlur={handleBlur}
+                    value={values.farmaish}
+                    errors={errors}
+                    keyboard="default"
+                    multiline={true}
+                  />
+                </View>
               </View>
               <View style={styles.buttonContainer}>
                 <Button

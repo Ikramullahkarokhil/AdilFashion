@@ -88,6 +88,7 @@ const initializeDatabase = async () => {
           qad REAL,
           yakhan TEXT,
           shana REAL,
+          shanaType TEXT,
           baghal REAL,
           kamar REAL,
           soreen REAL,
@@ -338,6 +339,7 @@ export const updateWaskat = async (id, values) => {
           qad = ?, 
           yakhan = ?, 
           shana = ?, 
+          shanaType = ?,
           baghal = ?, 
           kamar = ?, 
           soreen = ?, 
@@ -352,6 +354,7 @@ export const updateWaskat = async (id, values) => {
             values.qad,
             values.yakhan,
             values.shana,
+            values.shanaType,
             values.baghal,
             values.kamar,
             values.soreen,
@@ -460,9 +463,9 @@ export const restoreWaskat = async (waskatData) => {
         }
         const result = await db.runAsync(
           `INSERT INTO waskat (
-            id, name, phoneNumber, qad, yakhan, shana, baghal, kamar, 
+            id, name, phoneNumber, qad, yakhan, shana,shanaType, baghal, kamar, 
             soreen, astin, farmaish, registrationDate
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?)`,
           [
             waskatData.id,
             waskatData.name || "",
@@ -470,6 +473,7 @@ export const restoreWaskat = async (waskatData) => {
             waskatData.qad || "",
             waskatData.yakhan || "",
             waskatData.shana || "",
+            waskatData.shanaType || "",
             waskatData.baghal || "",
             waskatData.kamar || "",
             waskatData.soreen || "",

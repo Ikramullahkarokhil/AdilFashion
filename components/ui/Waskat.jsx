@@ -106,16 +106,16 @@ const Waskat = () => {
 
     return `${year}-${month}-${day}`;
   };
-  const currentDate = getCurrentDate();
 
   const selectYakhan = ["وی v", "ګول", "یخندار"];
+  const shanaTypes = ["نیمه ډاون", "ډاون"];
 
   const saveCustomerWaskat = async (values, resetForm) => {
     const currentDate = getCurrentDate();
 
     try {
       const resultSet = await addWaskat(
-        "INSERT INTO waskat (name, phoneNumber, qad, yakhan, yakhanValue, shana, baghal, kamar, soreen, astin, farmaish, registrationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO waskat (name, phoneNumber, qad, yakhan, yakhanValue, shana,shanaType, baghal, kamar, soreen, astin, farmaish, registrationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [
           values.name,
           values.phoneNumber,
@@ -123,6 +123,7 @@ const Waskat = () => {
           values.yakhan,
           values.yakhanValue,
           values.shana,
+          values.shanaType,
           values.baghal,
           values.kamar,
           values.soreen,
@@ -150,6 +151,7 @@ const Waskat = () => {
           qad: "",
           yakhan: "",
           shana: "",
+          shanaType: "",
           baghal: "",
           kamar: "",
           soreen: "",
@@ -288,17 +290,32 @@ const Waskat = () => {
               </View>
             </View>
 
-            <View style={styles.fieldContainer}>
-              <DynamicInputField
-                label="فرمایشات"
-                name="farmaish"
-                handleChange={handleChange}
-                handleBlur={handleBlur}
-                value={values.farmaish}
-                errors={errors}
-                keyboard="default"
-                multiline={true}
-              />
+            <View style={styles.fieldContainer2}>
+              <View style={styles.fieldContainer}>
+                <DynamicSelectField
+                  label="نوع شانه"
+                  name="shanaType"
+                  handleChange={handleChange}
+                  handleBlur={handleBlur}
+                  value={values.shanaType}
+                  items={shanaTypes}
+                  errors={errors}
+                  resetField={resetFields}
+                />
+              </View>
+
+              <View style={styles.fieldContainer}>
+                <DynamicInputField
+                  label="فرمایشات"
+                  name="farmaish"
+                  handleChange={handleChange}
+                  handleBlur={handleBlur}
+                  value={values.farmaish}
+                  errors={errors}
+                  keyboard="default"
+                  multiline={true}
+                />
+              </View>
             </View>
 
             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
